@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VOO - Passageiro</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}body{background:#f5f5f5}header{background:#000;color:#fff;padding:15px;text-align:center;font-weight:bold}.box{background:#fff;margin:10px;padding:14px;border-radius:12px} input{width:100%;padding:14px;margin:6px 0;border:1px solid #ccc;border-radius:8px;font-size:16px} button{width:100%;padding:14px;border:none;border-radius:10px;font-weight:bold;font-size:16px;margin-top:8px;cursor:pointer}.btn-black{background:#000;color:#fff}.btn-green{background:#00c853;color:#fff} #map{height:300px;border-radius:10px;margin-top:10px}.vals{display:flex;gap:6px;margin-top:10px}.vals div{flex:1;background:#eee;padding:8px;border-radius:8px;text-align:center}.vals b{display:block;font-size:16px}.sug{border:1px solid #ddd;border-radius:8px;display:none;max-height:120px;overflow:auto;background:#fff}.sug div{padding:8px;border-bottom:1px solid #eee;cursor:pointer} #tela2{display:none}</style>
+</head>
+<body>
+<header>VOO DE CARONA - PASSAGEIRO</header>
+<div id="tela1" class="box">
+<input id="origem" placeholder="De onde?"><div id="sugO" class="sug"></div>
+<input id="destino" placeholder="Para onde?"><div id="sugD" class="sug"></div>
+<button class="btn-black" onclick="calcular()">CALCULAR R$ 1,42/km</button>
+<div id="res" class="vals" style="display:none"><div>DIST<b id="d1"></b></div><div>TEMPO<b id="t1"></b></div><div>VALOR<b id="v1" style="color:green"></b></div></div>
+<div id="map"></div>
+<button id="btnS" class="btn-green" style="display:none" onclick="solicitar()">SOLICITAR VOO</button>
+</div>
+<div id="tela2" class="box">
+<h3>Solicitado!</h3><p id="det"></p><div id="map2" style="height:300px;border-radius:10px"></div>
+<div class="vals"><div>ATÉ BUSCAR<b id="ateB"></b></div><div>ATÉ LEVAR<b id="ateL"></b></div><div>TOTAL<b id="tot"></b></div></div>
+<p id="st" style="text-align:center;margin-top:10px;font-weight:bold">Aguardando motorista...</p>
+<button style="background:#d32f2f;color:#fff" onclick="localStorage.removeItem('voo_corrida_atual');location.reload()">CANCELAR</button>
+</div>
+<script>
+let map=L.map('map').setView([-14.866,-40.839],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+let map2=L.map('map2').setView([-14.866,-40.839],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map2);
+let cO,cD,dist,valor,rota;
+function busca(q,cb){fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q+', Vitoria da Conquista')}&limit=5`).then(r=>r.json()).then(cb);}
+origem.oninput=e=>{if(e.target.value.length<3)return;busca(e.target.value,l=>{sugO.innerHTML='';sugO.style.display='block';l.forEach(i=>{let d=document.createElement('div');d.textContent=i.display_name;d.onclick=()=>{origem.value=i.display_name;cO=[+i.lat,+i.lon];sugO.style.display='none';};sugO.appendChild(d);});});};
+destino.oninput=e=>{if(e.target.value.length<3)return;busca(e.target.value,l=>{sugD.innerHTML='';sugD.style.display='block';l.forEach(i=>{let d=document.createElement('div');d.textContent=i.display_name;d.onclick=()=>{destino.value=i.display_name;cD=[+i.lat,+i.lon];sugD.style.display='none';};sugD.appendChild(d);});});};
+async function geoc(t){let r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(t)}&limit=1`);let j=await r.json();return j[0]?[+j[0].lat,+j[0].lon]:null;}
+async function calcular(){if(!cO)cO=await geoc(origem.value);if(!cD)cD=await geoc(destino.value);if(!cO||!cD){alert('Endereco nao encontrado');return;}let u=`https://router.project-osrm.org/route/v1/driving/${cO[1]},${cO[0]};${cD[1]},${cD[0]}?overview=full&geometries=geojson`;let j=await(await fetch(u)).json();let r=j.routes[0];dist=r.distance/1000;let tempo=Math.round(r.duration/60);valor=Math.max(7,dist*1.42);d1.textContent=dist.toFixed(2)+' km';t1.textContent=tempo+' min';v1.textContent='R$ '+valor.toFixed(2);res.style.display='flex';btnS.style.display='block';if(rota)map.removeLayer(rota);rota=L.geoJSON(r.geometry,{style:{color:'#000',weight:5}}).addTo(map);map.fitBounds(rota.getBounds());}
+function solicitar(){let corrida={id:Date.now(),origem:origem.value,destino:destino.value,cO,cD,dist,valor,status:'solicitada',hora:new Date().toISOString()};localStorage.setItem('voo_corrida_atual',JSON.stringify(corrida));let lista=JSON.parse(localStorage.getItem('voo_corridas')||'[]');lista.push(corrida);localStorage.setItem('voo_corridas',JSON.stringify(lista));tela1.style.display='none';tela2.style.display='block';det.innerHTML=`De: ${corrida.origem}<br>Para: ${corrida.destino}<br>Valor: R$ ${valor.toFixed(2)}`;ateL.textContent=dist.toFixed(2)+' km';tot.textContent=dist.toFixed(2)+' km';ateB.textContent=(Math.random()*1.5+0.3).toFixed(2)+' km';setTimeout(()=>map2.invalidateSize(),500);}
+</script>
+</body>
+</html>
