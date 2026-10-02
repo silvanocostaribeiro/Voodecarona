@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VOO Motorista FINAL</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>VOO Motorista - FINAL Conquista</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
 body{background:#fff;overflow:hidden}
 #map{position:absolute;top:0;left:0;width:100%;height:100vh;z-index:1}
 .topo{position:absolute;top:0;left:0;right:0;z-index:1000;background:#000;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.saldo{font-weight:900;color:#00ff88}
 .btnOn{padding:10px 18px;border-radius:30px;border:none;font-weight:900;background:#333;color:#fff}
 .btnOn.on{background:#00c853;color:#000}
 .nav{position:absolute;top:58px;left:10px;right:10px;z-index:900;background:#fff;border-radius:16px;padding:12px 16px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.3)}
@@ -20,85 +21,90 @@ body{background:#fff;overflow:hidden}
 .timer{height:5px;background:#eee;border-radius:10px;margin:8px 0;overflow:hidden}
 .timer div{height:100%;background:#00c853;width:100%;transition:1s linear}
 .btn{width:100%;padding:18px;border:none;border-radius:14px;font-weight:900;font-size:16px;margin-top:10px}
-.btnBlack{background:#000;color:#fff}.btnGreen{background:#00c853;color:#000}.btnRed{background:#fff;color:#c00;border:2px solid #fcc}
+.btnBlack{background:#000;color:#fff}.btnGreen{background:#00c853;color:#000}.btnRed{background:#fff;color:#c00;border:2px solid #ffcccc}
 #fab{position:absolute;z-index:1100;left:16px;right:16px;display:none;flex-direction:column;gap:8px;bottom:16px}
 .fabBtn{padding:16px;border:none;border-radius:16px;font-weight:900;box-shadow:0 4px 15px rgba(0,0,0,.2)}
-.chat{position:absolute;bottom:0;left:0;right:0;z-index:1200;background:#fff;border-radius:28px 28px 0 0;display:none;flex-direction:column;max-height:85vh}
+.chat{position:absolute;bottom:0;left:0;right:0;z-index:1200;background:#fff;border-radius:28px 28px 0 0;display:none;flex-direction:column;max-height:85vh;box-shadow:0 -5px 30px rgba(0,0,0,.4)}
 .chatHead{background:#000;color:#fff;padding:16px;border-radius:28px 28px 0 0;display:flex;justify-content:space-between}
 .msgs{padding:16px;overflow-y:auto;flex:1;min-height:280px}
-.msg{padding:10px 14px;border-radius:18px;margin:6px 0;max-width:80%}
+.msg{padding:10px 14px;border-radius:18px;margin:6px 0;max-width:80%;font-size:14px}
 .eu{background:#000;color:#fff;margin-left:auto}.out{background:#eee}
-.bairro{font-size:20px;font-weight:900;color:#000}
-.bairro2{font-size:20px;font-weight:900;color:#00c853}
+.bairroG{font-size:19px;font-weight:900}
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="topo"><div>🚗 VOO • R$ <span id="saldo">0,00</span></div><button class="btnOn" id="btnOn" onclick="toggle()">FICAR ONLINE</button></div>
-<div class="nav" id="nav"><b id="navTxt">Pronto pra rodar</b><br><small>Conquista - BA</small></div>
+<div class="topo"><div>🚗 VOO • R$ <span class="saldo" id="saldo">0,00</span></div><button class="btnOn" id="btnOn" onclick="toggle()">FICAR ONLINE</button></div>
+<div class="nav" id="nav"><b id="navTxt">Pronto pra rodar</b><br><small id="navSub">Aguardando corrida em Conquista</small></div>
 
 <div id="fab">
 <button class="fabBtn" id="bChegou" style="background:#00c853;display:none" onclick="chegueiLocal()">📍 CHEGUEI NO PASSAGEIRO</button>
 <button class="fabBtn" id="bIniciar" style="background:#000;color:#fff;display:none" onclick="iniciarCorrida()">▶️ INICIAR CORRIDA</button>
 <button class="fabBtn" id="bDestino" style="background:#00c853;display:none" onclick="chegueiDestino()">🏁 CHEGUEI NO DESTINO</button>
-<div style="display:flex;gap:8px"><button class="fabBtn" style="flex:1;background:#fff" onclick="abrirChat()">💬 CHAT</button><button class="fabBtn" style="flex:1;background:#fff" onclick="document.getElementById('sCorrida').style.display='none'">▼ MAPA</button></div>
+<div style="display:flex;gap:8px"><button class="fabBtn" style="flex:1;background:#fff" onclick="abrirChat()">💬 CHAT</button><button class="fabBtn" style="flex:1;background:#fff" onclick="minimizar()">▼ MAPA</button></div>
 <button class="fabBtn" style="background:#ff4444;color:#fff" onclick="cancelar()">❌ CANCELAR</button>
 </div>
 
 <div class="sheet" id="sNova" style="display:none"><div class="handle"></div><div class="cont">
-<div style="display:flex;justify-content:space-between"><span id="kmTop" style="background:#000;color:#0f8;padding:4px 10px;border-radius:20px;font-size:12px"></span><span id="timeTop" style="font-weight:900">15s</span></div>
+<div style="display:flex;justify-content:space-between"><span id="kmTop" style="background:#000;color:#0f8;padding:4px 10px;border-radius:20px;font-size:12px">0 km</span><span id="timeTop" style="font-weight:900">15s</span></div>
 <div class="timer"><div id="bar"></div></div>
 <div class="preco" id="valor">R$ 0,00</div>
-<div id="formaTop" style="font-weight:800"></div>
+<div id="formaTop" style="font-weight:800;margin:4px 0"></div>
 <div style="background:#f6f6f6;padding:12px;border-radius:12px;margin:8px 0">
-📍 BUSCAR EM: <span class="bairro" id="endB"></span> - <b id="kmB"></b><br>
-🏁 LEVAR PARA: <span class="bairro2" id="endD"></span> - <b id="kmL"></b>
+📍 BUSCAR EM: <span class="bairroG" id="endB">Candeias</span> - <b id="kmB"></b><br>
+🏁 LEVAR PARA: <span class="bairroG" style="color:#00c853" id="endD">Centro</span> - <b id="kmL"></b>
 </div>
-<button class="btn btnBlack" onclick="aceitar()">✅ ACEITAR</button>
+<small>👤 Passageiro 4.9⭐</small><br>
+<button class="btn btnBlack" onclick="aceitar()">✅ ACEITAR - 1 TOQUE</button>
 <button class="btn btnRed" onclick="recusar()">❌ RECUSAR</button>
 </div></div>
 
 <div class="sheet" id="sCorrida" style="display:none"><div class="handle"></div><div class="cont">
-<h3>Em andamento</h3>
-<p>📍 <span id="endB2" class="bairro"></span></p>
-<p>🏁 <span id="endD2" class="bairro2"></span></p>
+<h3>Corrida em andamento</h3>
+<p>📍 <span id="endB2" class="bairroG"></span> - <b id="kmB2"></b></p>
+<p>🏁 <span id="endD2" class="bairroG" style="color:#00c853"></span> - <b id="kmL2"></b></p>
 <p>💰 <b id="valor2"></b> - <span id="forma2"></span></p>
 </div></div>
 
 <div class="sheet" id="sPag" style="display:none"><div class="handle"></div><div class="cont" style="text-align:center">
 <h2 id="pagTitulo">💰 RECEBER</h2>
-<div class="preco" id="pagV"></div><p id="pagInfo"></p>
-<div id="areaDinheiro" style="display:none"><p style="background:#fff3cd;padding:12px;border-radius:10px">⚠️ COBRAR DINHEIRO NA MÃO</p><button class="btn btnBlack" onclick="finalizar()">✅ RECEBI DINHEIRO</button></div>
-<div id="areaPix" style="display:none"><p style="background:#d4edda;padding:12px;border-radius:10px">💠 MOSTRAR QR CODE</p><div style="width:200px;height:200px;background:#fff;border:2px dashed #000;margin:10px auto;display:flex;align-items:center;justify-content:center;font-weight:900;text-align:center">QR CODE<br><span id="qrValor"></span><br>PIX VOO</div><button class="btn btnGreen" onclick="finalizar()">✅ PIX RECEBIDO</button></div>
+<div class="preco" id="pagV"></div>
+<p id="pagInfo" style="font-weight:800;margin:8px 0"></p>
+<div id="areaDinheiro" style="display:none">
+<p style="background:#fff3cd;padding:12px;border-radius:10px">⚠️ COBRAR EM DINHEIRO NA MÃO</p>
+<button class="btn btnBlack" onclick="finalizar()">✅ DINHEIRO RECEBIDO</button>
+</div>
+<div id="areaPix" style="display:none">
+<p style="background:#d4edda;padding:12px;border-radius:10px">💠 PIX - Mostrar pro passageiro pagar</p>
+<div style="width:200px;height:200px;background:#fff;border:2px dashed #000;margin:10px auto;display:flex;align-items:center;justify-content:center;font-weight:900;text-align:center">QR CODE<br><span id="qrValor"></span><br>PIX: VOO</div>
+<button class="btn btnGreen" onclick="finalizar()">✅ PIX RECEBIDO</button>
+</div>
 </div></div>
 
-<div class="chat" id="chat"><div class="chatHead"><span>💬 Passageiro</span><span onclick="document.getElementById('chat').style.display='none'">✕</span></div><div class="msgs" id="msgs"><div class="msg out">Tô na porta</div></div><div style="padding:10px;display:flex;gap:8px"><input id="inp" style="flex:1;padding:14px;border-radius:20px;border:1px solid #ddd" placeholder="Digite..."><button onclick="enviar()" style="background:#000;color:#fff;border:none;padding:12px 16px;border-radius:20px;font-weight:900">Enviar</button></div></div>
+<div class="chat" id="chat"><div class="chatHead"><span>💬 Passageiro</span><span onclick="fecharChat()" style="font-size:20px">✕</span></div><div class="msgs" id="msgs"><div class="msg out">Olá! Tô te esperando na porta</div></div><div style="padding:10px;display:flex;gap:8px;border-top:1px solid #eee"><input id="inp" placeholder="Digite..." style="flex:1;padding:14px;border-radius:20px;border:1px solid #ddd"><button onclick="enviar()" style="background:#000;color:#fff;border:none;padding:12px 16px;border-radius:20px;font-weight:900">Enviar</button></div></div>
 
 <script>
 let map=L.map('map',{zoomControl:false,attributionControl:false}).setView([-14.866,-40.839],16)
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
 let eu=L.marker([-14.866,-40.839]).addTo(map)
-let mk1,mk2,linha,online=false,saldo=Number(localStorage.getItem('saldo')||0),dados={},timerInt,somInterval,corridaAtiva=false
+let mk1,mk2,linha,online=false,corridaAtiva=false,saldo=Number(localStorage.getItem('saldo')||0),dados={},timerInt,somInterval=null
 document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',')
 if(navigator.geolocation){navigator.geolocation.watchPosition(p=>{eu.setLatLng([p.coords.latitude,p.coords.longitude])},null,{enableHighAccuracy:true})}
-
-function toggle(){if(corridaAtiva){alert('⚠️ Em corrida! Finalize ou cancele antes de ficar offline.');return}online=!online;let b=document.getElementById('btnOn');b.classList.toggle('on',online);b.innerText=online?'● ONLINE':'FICAR ONLINE';document.getElementById('nav').style.display=online?'block':'none';if(online)buscar();else location.reload()}
-
-function tocar(){try{if(somInterval)clearInterval(somInterval);let ctx=new(window.AudioContext||window.webkitAudioContext)();function bip(){let o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='square';o.frequency.value=950;g.gain.setValueAtTime(1,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.4);o.start();o.stop(ctx.currentTime+0.4);setTimeout(()=>{let o2=ctx.createOscillator(),g2=ctx.createGain();o2.connect(g2);g2.connect(ctx.destination);o2.type='square';o2.frequency.value=1200;g2.gain.setValueAtTime(1,ctx.currentTime);g2.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.4);o2.start();o2.stop(ctx.currentTime+0.4)},180)}bip();somInterval=setInterval(bip,1300);if(navigator.vibrate)navigator.vibrate([300,100,300,100,500])}catch(e){}}
+function toggle(){if(corridaAtiva){alert('⚠️ Você está em corrida! Finalize ou cancele antes de ficar offline.');return;}online=!online;let b=document.getElementById('btnOn');b.classList.toggle('on',online);b.innerText=online?'● ONLINE':'FICAR ONLINE';document.getElementById('nav').style.display=online?'block':'none';if(online)buscar();else location.reload()}
+function tocar(){try{if(somInterval)clearInterval(somInterval);let ctx=new(window.AudioContext||window.webkitAudioContext)();function bip(){let o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='square';o.frequency.value=950;g.gain.setValueAtTime(1,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.5);o.start();o.stop(ctx.currentTime+0.5);setTimeout(()=>{let o2=ctx.createOscillator(),g2=ctx.createGain();o2.connect(g2);g2.connect(ctx.destination);o2.type='square';o2.frequency.value=1200;g2.gain.setValueAtTime(1,ctx.currentTime);g2.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.5);o2.start();o2.stop(ctx.currentTime+0.5)},200)}bip();somInterval=setInterval(bip,1300);if(navigator.vibrate)navigator.vibrate([300,100,300,100,500])}catch(e){}}
 function pararSom(){if(somInterval){clearInterval(somInterval);somInterval=null}if(navigator.vibrate)navigator.vibrate(0)}
-
 function buscar(){corridaAtiva=false;document.getElementById('sNova').style.display='none';document.getElementById('fab').style.display='none';document.getElementById('sCorrida').style.display='none';document.getElementById('sPag').style.display='none';if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha)
-setTimeout(()=>{let bairros=['Centro','Candeias','Recreio','Brasil','Patagônia','Ibirapuera','Felícia','Morada Real','UrBis VI','Jatobá','Alto Maron','Guarani','Boa Vista','Bateias','Cachoeira'];let b1=bairros[Math.floor(Math.random()*bairros.length)],b2=bairros[Math.floor(Math.random()*bairros.length)];while(b2==b1){b2=bairros[Math.floor(Math.random()*bairros.length)]}let b=(Math.random()*1+0.4).toFixed(1),l=(Math.random()*2.5+1).toFixed(1),t=(parseFloat(b)+parseFloat(l)).toFixed(1),v=(3.5+parseFloat(t)*2.2).toFixed(2);dados={v:v,forma:Math.random()>0.5?'DINHEIRO':'PIX PAGO',bairroBusca:b1,bairroLeva:b2};document.getElementById('kmB').innerText=b+'km';document.getElementById('kmL').innerText=l+'km';document.getElementById('endB').innerText=b1;document.getElementById('endD').innerText=b2;document.getElementById('endB2').innerText=b1;document.getElementById('endD2').innerText=b2;document.getElementById('kmTop').innerText=t+'km';document.getElementById('valor').innerText='R$ '+v.replace('.',',');document.getElementById('valor2').innerText='R$ '+v.replace('.',',');document.getElementById('formaTop').innerText=dados.forma+' • '+b1+' → '+b2;document.getElementById('forma2').innerText=dados.forma;let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng;mk1=L.marker([lat+0.004,lng+0.004]).addTo(map);mk2=L.marker([lat+0.012,lng+0.012]).addTo(map);linha=L.polyline([[lat,lng],[lat+0.004,lng+0.004],[lat+0.012,lng+0.012]],{color:'#00c853',weight:6}).addTo(map);map.fitBounds(linha.getBounds(),{padding:[80,80]});document.getElementById('sNova').style.display='block';tocar();iniciaTimer()},1200)}
-
+setTimeout(()=>{let bairros=['Centro','Candeias','Recreio','Brasil','Patagônia','Ibirapuera','Felícia','Morada Real','UrBis VI','Jatobá','Alto Maron','Guarani','Boa Vista'];let b1=bairros[Math.floor(Math.random()*bairros.length)],b2=bairros[Math.floor(Math.random()*bairros.length)];while(b2==b1){b2=bairros[Math.floor(Math.random()*bairros.length)]}let b=(Math.random()*1+0.4).toFixed(1),l=(Math.random()*2.5+1).toFixed(1),t=(parseFloat(b)+parseFloat(l)).toFixed(1),v=(3.5+parseFloat(t)*2.2).toFixed(2);dados={v:v,forma:Math.random()>0.5?'DINHEIRO':'PIX PAGO',bairroBusca:b1,bairroLeva:b2};document.getElementById('kmB').innerText=b+'km';document.getElementById('kmL').innerText=l+'km';document.getElementById('endB').innerText=b1;document.getElementById('endD').innerText=b2;document.getElementById('endB2').innerText=b1;document.getElementById('endD2').innerText=b2;document.getElementById('kmTop').innerText=t+'km';document.getElementById('valor').innerText='R$ '+v.replace('.',',');document.getElementById('valor2').innerText='R$ '+v.replace('.',',');document.getElementById('formaTop').innerText=dados.forma+' • '+b1+' → '+b2;document.getElementById('forma2').innerText=dados.forma;let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng;mk1=L.marker([lat+0.004,lng+0.004]).addTo(map);mk2=L.marker([lat+0.012,lng+0.012]).addTo(map);linha=L.polyline([[lat,lng],[lat+0.004,lng+0.004],[lat+0.012,lng+0.012]],{color:'#00c853',weight:6}).addTo(map);map.fitBounds(linha.getBounds(),{padding:[80,80]});document.getElementById('sNova').style.display='block';tocar();iniciaTimer()},1200)}
 function iniciaTimer(){let t=15;clearInterval(timerInt);document.getElementById('bar').style.width='100%';timerInt=setInterval(()=>{t--;document.getElementById('timeTop').innerText=t+'s';document.getElementById('bar').style.width=(t/15*100)+'%';if(t<=0){clearInterval(timerInt);pararSom();recusar()}},1000)}
 function aceitar(){pararSom();corridaAtiva=true;clearInterval(timerInt);document.getElementById('sNova').style.display='none';document.getElementById('sCorrida').style.display='block';document.getElementById('fab').style.display='flex';document.getElementById('bChegou').style.display='block';document.getElementById('bIniciar').style.display='none';document.getElementById('bDestino').style.display='none';document.getElementById('navTxt').innerText='A caminho: '+dados.bairroBusca;map.setView(eu.getLatLng(),18)}
 function recusar(){pararSom();clearInterval(timerInt);document.getElementById('sNova').style.display='none';buscar()}
-function chegueiLocal(){document.getElementById('bChegou').style.display='none';document.getElementById('bIniciar').style.display='block';}
-function iniciarCorrida(){if(mk1)map.removeLayer(mk1);let dest=linha.getLatLngs()[2];linha.setLatLngs([eu.getLatLng(),dest]);map.fitBounds(linha.getBounds(),{padding:[60,60]});document.getElementById('bIniciar').style.display='none';document.getElementById('bDestino').style.display='block';document.getElementById('navTxt').innerText='Levando para: '+dados.bairroLeva;document.getElementById('sCorrida').style.display='none';}
+function minimizar(){document.getElementById('sCorrida').style.display='none'}
+function cancelar(){let m=prompt('Cancelar?\n1-Carro quebrou\n2-Pneu\n3-Engano\n4-Passageiro não apareceu');if(m){corridaAtiva=false;pararSom();buscar()}}
+function chegueiLocal(){document.getElementById('bChegou').style.display='none';document.getElementById('bIniciar').style.display='block'}
+function iniciarCorrida(){if(mk1)map.removeLayer(mk1);let dest=linha.getLatLngs()[2];linha.setLatLngs([eu.getLatLng(),dest]);map.fitBounds(linha.getBounds(),{padding:[60,60]});document.getElementById('bIniciar').style.display='none';document.getElementById('bDestino').style.display='block';document.getElementById('navTxt').innerText='Levando para: '+dados.bairroLeva;document.getElementById('sCorrida').style.display='none'}
 function chegueiDestino(){document.getElementById('fab').style.display='none';document.getElementById('sPag').style.display='block';document.getElementById('pagV').innerText=document.getElementById('valor').innerText;document.getElementById('pagInfo').innerText=dados.forma+' - '+dados.bairroBusca+' → '+dados.bairroLeva;document.getElementById('qrValor').innerText=document.getElementById('valor').innerText;if(dados.forma.includes('DINHEIRO')){document.getElementById('areaDinheiro').style.display='block';document.getElementById('areaPix').style.display='none';document.getElementById('pagTitulo').innerText='💵 RECEBER EM DINHEIRO'}else{document.getElementById('areaDinheiro').style.display='none';document.getElementById('areaPix').style.display='block';document.getElementById('pagTitulo').innerText='💠 RECEBER NO PIX'}}
 function finalizar(){saldo+=parseFloat(dados.v);localStorage.setItem('saldo',saldo);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');document.getElementById('sPag').style.display='none';buscar()}
-function cancelar(){let m=prompt('Cancelar?\n1-Carro quebrou\n2-Pneu\n3-Engano\n4-Passageiro sumiu');if(m){pararSom();buscar()}}
-function abrirChat(){document.getElementById('chat').style.display='flex'}
+function abrirChat(){document.getElementById('chat').style.display='flex'}function fecharChat(){document.getElementById('chat').style.display='none'}
 function enviar(){let i=document.getElementById('inp');if(!i.value.trim())return;let d=document.createElement('div');d.className='msg eu';d.innerText=i.value;document.getElementById('msgs').appendChild(d);i.value='';document.getElementById('msgs').scrollTop=9999}
 </script>
 </body>
