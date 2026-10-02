@@ -1,38 +1,26 @@
 <!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VOO Motorista</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}body{background:#f0f0f0}.topo{background:#000;color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000}.sw{width:62px;height:34px;background:#333;border-radius:20px;position:relative}.sw.on{background:#00c853}.bola{width:28px;height:28px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:.3s}.sw.on .bola{left:31px}#map{height:50vh;width:100%}.card{background:#fff;margin:10px;border-radius:20px;padding:16px;box-shadow:0 4px 10px rgba(0,0,0,.15)}.btn{width:100%;padding:16px;border:none;border-radius:14px;font-weight:bold;font-size:16px;margin-top:8px;cursor:pointer}.btnV{background:#00c853;color:#fff}.btnA{background:#ff8c00;color:#fff}.btnPreto{background:#000;color:#fff}.et{display:none}.et.on{display:block}.navTop{background:#101010;color:#fff;padding:12px;display:flex;justify-content:space-between;align-items:center;display:none;position:sticky;top:62px;z-index:900}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;color:#00ff88;padding:14px 22px;border-radius:30px;font-weight:bold;z-index:9999;display:none}</style>
+<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}body{background:#f0f0f0}.topo{background:#000;color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000}.sw{width:62px;height:34px;background:#333;border-radius:20px;position:relative}.sw.on{background:#00c853}.bola{width:28px;height:28px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:.3s}.sw.on .bola{left:31px}#map{height:50vh;width:100%}.card{background:#fff;margin:10px;border-radius:20px;padding:16px}.btn{width:100%;padding:18px;border:none;border-radius:14px;font-weight:bold;font-size:18px;margin-top:10px}.btnV{background:#00c853;color:#fff}.btnLaranja{background:#ff8c00;color:#fff}.btnPreto{background:#000;color:#fff}.et{display:none}.et.on{display:block}.navTop{background:#000;color:#fff;padding:12px;display:none;justify-content:space-between}.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#000;color:#00ff88;padding:14px 20px;border-radius:30px;font-weight:bold;display:none;z-index:9999}</style>
 </head><body>
 <div class="topo"><div><b>🚗 VOO</b> • R$ <span id="saldo">0,00</span></div><div style="text-align:center"><div class="sw" id="sw" onclick="toggle()"><div class="bola"></div></div><br><small id="txt">OFFLINE</small></div></div>
-
-<div class="navTop" id="navTop"><div><small id="navStatus">NAVEGANDO</small><br><b id="navInst" style="font-size:18px;color:#00ff88">Siga em frente</b></div><div style="text-align:right"><b id="navDist">0 km</b><br><small id="navTempo">0 min</small></div></div>
-
+<div class="navTop" id="navTop"><div><small>NAVEGANDO DENTRO DO APP</small><br><b style="color:#00ff88" id="navInst">Siga em frente</b></div><div style="text-align:right"><b id="navDist">0 km</b></div></div>
 <div id="map"></div>
 <div class="toast" id="toast"></div>
 
-<div class="card et on" id="off"><center><b>🔴 OFFLINE</b><br><br>Fique ONLINE para tocar corrida</center></div>
+<div class="card et on" id="off"><center><b>🔴 OFFLINE</b><br><br>Fique ONLINE</center></div>
 
-<div class="card et" id="on" style="border:3px solid #00c853">
-<b>🔔 NOVA CORRIDA</b> - <b id="kmTop">0 km</b><br><br>
-<div style="background:#fff7e6;padding:10px;border-left:5px solid orange;border-radius:10px">📍 BUSCAR: <span id="kmB">0 km</span></div>
-<div style="background:#eef5ff;padding:10px;border-left:5px solid blue;border-radius:10px;margin-top:6px">🏁 LEVAR: <span id="kmL">0 km</span></div>
-<h1 style="text-align:center;margin:10px 0" id="valor">R$ 0,00</h1>
-<button class="btn btnV" onclick="aceitar()">✅ ACEITAR E NAVEGAR DENTRO DO APP</button>
-<button class="btn" style="background:#eee" onclick="recusar()">❌ RECUSAR</button>
-</div>
+<div class="card et" id="on" style="border:3px solid #00c853"><b>🔔 NOVA CORRIDA</b> <b id="kmTop">0 km</b><br><br><div style="background:#fff7e6;padding:10px;border-radius:10px">📍 BUSCAR: <span id="kmB">0</span></div><div style="background:#eef5ff;padding:10px;border-radius:10px;margin-top:6px">🏁 LEVAR: <span id="kmL">0</span></div><h1 style="text-align:center;margin:10px 0" id="valor">R$ 0</h1><button class="btn btnV" onclick="aceitar()">✅ ACEITAR</button></div>
 
-<!-- PAINEL QUE APARECE DEPOIS QUE ACEITA - COM OS 2 COMANDOS QUE VOCÊ PEDIU -->
+<!-- AQUI ESTÃO OS 2 BOTÕES QUE VOCÊ PEDIU NO ÁUDIO -->
 <div class="card et" id="run" style="border:3px solid #000;text-align:center">
-<h3>🚗 EM CORRIDA - GPS DENTRO DO APP</h3>
-<div style="background:#101010;color:#fff;padding:10px;border-radius:12px;margin:10px 0"><small>Passageira:</small><br><b id="runNome">Maria</b> - <b id="runValor">R$ 0</b></div>
+<h2>🚗 EM CORRIDA - GPS DENTRO DO APP</h2>
+<p style="background:#101010;color:#fff;padding:10px;border-radius:10px;margin:10px 0">Passageiro: <b id="runNome">Maria</b> - <span id="runValor">R$ 0</span></p>
 
-<!-- COMANDOS DE MENSAGEM -->
-<button class="btn btnA" onclick="enviarMsg('Estou a caminho! 🚗')">📨 ESTOU A CAMINHO</button>
-<button class="btn btnV" onclick="enviarMsg('Cheguei no local! 📍 Estou te esperando em frente')">📍 CHEGUEI NO LOCAL</button>
+<button class="btn btnLaranja" onclick="msg('Estou a caminho! 🚗')" style="font-size:20px">📨 ESTOU A CAMINHO</button>
+<button class="btn btnV" onclick="msg('Cheguei no local! 📍 Estou te esperando na frente')" style="font-size:20px">📍 CHEGUEI NO LOCAL</button>
 
-<div style="display:flex;gap:8px;margin-top:10px">
-<button class="btn btnPreto" style="flex:1" onclick="cheguei()">🏁 PASSAGEIRO EMBARCOU</button>
-<button class="btn" style="flex:1;background:#ff0000;color:#fff" onclick="finalizar()">💰 FINALIZAR</button>
-</div>
+<button class="btn btnPreto" onclick="embarcou()">🏁 PASSAGEIRO EMBARCOU - IR PARA DESTINO</button>
+<button class="btn" style="background:red;color:#fff" onclick="finalizar()">💰 FINALIZAR CORRIDA</button>
 </div>
 
 <script>
@@ -40,35 +28,12 @@ let map=L.map('map',{zoomControl:false}).setView([-14.866,-40.839],15)
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
 let eu=L.marker([-14.866,-40.839]).addTo(map)
 let mk1,mk2,linha,online=false,saldo=0,dados,paxLat=0,paxLng=0,dLat=0,dLng=0,navegando=false,etapa='buscar'
-
 if(navigator.geolocation){navigator.geolocation.watchPosition(p=>{let la=p.coords.latitude,lo=p.coords.longitude;eu.setLatLng([la,lo]);if(navegando){map.setView([la,lo],18);calc(la,lo)}},null,{enableHighAccuracy:true})}
-
 function toggle(){online=!online;let sw=document.getElementById('sw'),t=document.getElementById('txt');if(online){sw.classList.add('on');t.innerText='ONLINE';buscar()}else{sw.classList.remove('on');t.innerText='OFFLINE';document.getElementById('on').classList.remove('on');document.getElementById('run').classList.remove('on');document.getElementById('off').classList.add('on');document.getElementById('navTop').style.display='none';navegando=false}}
-
 function buscar(){setTimeout(()=>{let b=(Math.random()*1+0.3).toFixed(1),l=(Math.random()*3+1).toFixed(1),t=(parseFloat(b)+parseFloat(l)).toFixed(1),v=(2.5+parseFloat(t)*1.8).toFixed(2);dados={b,l,t,v};document.getElementById('kmB').innerText=b+' km';document.getElementById('kmL').innerText=l+' km';document.getElementById('kmTop').innerText=t+' km';document.getElementById('valor').innerText='R$ '+v.replace('.',',');let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng;paxLat=lat+(Math.random()*0.01-0.005);paxLng=lng+(Math.random()*0.01-0.005);dLat=paxLat+(Math.random()*0.02-0.01);dLng=paxLng+(Math.random()*0.02-0.01);if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha);mk1=L.marker([paxLat,paxLng]).addTo(map);mk2=L.marker([dLat,dLng]).addTo(map);linha=L.polyline([[lat,lng],[paxLat,paxLng],[dLat,dLng]],{color:'#0066ff',weight:7}).addTo(map);map.fitBounds(linha.getBounds(),{padding:[40,40]});document.getElementById('off').classList.remove('on');document.getElementById('on').classList.add('on')},1500)}
-
-function aceitar(){
- document.getElementById('on').classList.remove('on');document.getElementById('run').classList.add('on');
- document.getElementById('navTop').style.display='flex';
- document.getElementById('navStatus').innerText='INDO BUSCAR - DENTRO DO APP';
- document.getElementById('runNome').innerText='Maria';document.getElementById('runValor').innerText=document.getElementById('valor').innerText;
- navegando=true;etapa='buscar';map.setView(eu.getLatLng(),18);
- falar('Rota calculada. Siga em frente dentro do aplicativo.');
-}
-
-function enviarMsg(texto){
- // MOSTRA QUE ENVIOU
- let toast=document.getElementById('toast');toast.innerText='✅ Mensagem enviada: '+texto;toast.style.display='block';
- setTimeout(()=>{toast.style.display='none'},3000);
- falar(texto);
- // AQUI FUTURO VAI ENVIAR PRO PASSAGEIRO DE VERDADE - POR ENQUANTO MOSTRA NA TELA
- // Se quiser mandar no Zap do passageiro, é só colocar o número aqui:
- // window.open('https://wa.me/55NUMERO?text='+encodeURIComponent(texto),'_blank')
-}
-
-function falar(t){if('speechSynthesis' in window){let u=new SpeechSynthesisUtterance(t);u.lang='pt-BR';speechSynthesis.speak(u)}}
-function calc(la,lo){let al=etapa=='buscar'?paxLat:dLat, ao=etapa=='buscar'?paxLng:dLng;let R=6371,dl=(al-la)*Math.PI/180,dn=(ao-lo)*Math.PI/180;let a=Math.sin(dl/2)**2+Math.cos(la*Math.PI/180)*Math.cos(al*Math.PI/180)*Math.sin(dn/2)**2;let d=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));document.getElementById('navDist').innerText=d.toFixed(2)+' km';document.getElementById('navTempo').innerText=Math.round(d*3+1)+' min'}
-function cheguei(){etapa='levar';document.getElementById('navStatus').innerText='LEVANDO PASSAGEIRO';falar('Passageiro embarcou. Seguindo para destino.');linha.setLatLngs([[eu.getLatLng().lat,eu.getLatLng().lng],[dLat,dLng]])}
-function recusar(){document.getElementById('on').classList.remove('on');document.getElementById('off').classList.add('on');buscar()}
+function aceitar(){document.getElementById('on').classList.remove('on');document.getElementById('run').classList.add('on');document.getElementById('navTop').style.display='flex';document.getElementById('runValor').innerText=document.getElementById('valor').innerText;navegando=true;etapa='buscar';map.setView(eu.getLatLng(),18)}
+function msg(t){let x=document.getElementById('toast');x.innerText='✅ Enviado para passageiro: '+t;x.style.display='block';setTimeout(()=>x.style.display='none',4000);let u=new SpeechSynthesisUtterance(t);u.lang='pt-BR';speechSynthesis.speak(u)}
+function calc(la,lo){let al=etapa=='buscar'?paxLat:dLat,ao=etapa=='buscar'?paxLng:dLng;let R=6371,dl=(al-la)*Math.PI/180,dn=(ao-lo)*Math.PI/180;let a=Math.sin(dl/2)**2+Math.cos(la*Math.PI/180)*Math.cos(al*Math.PI/180)*Math.sin(dn/2)**2;let d=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));document.getElementById('navDist').innerText=d.toFixed(2)+' km'}
+function embarcou(){etapa='levar';document.getElementById('navInst').innerText='Levando passageiro para destino';linha.setLatLngs([[eu.getLatLng().lat,eu.getLatLng().lng],[dLat,dLng]]);msg('Passageiro embarcou, seguindo para destino')}
 function finalizar(){saldo+=parseFloat(dados.v);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');document.getElementById('run').classList.remove('on');document.getElementById('off').classList.add('on');document.getElementById('navTop').style.display='none';navegando=false;if(linha)map.removeLayer(linha);buscar()}
 </script></body></html>
