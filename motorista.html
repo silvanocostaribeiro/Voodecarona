@@ -1,67 +1,38 @@
 <!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VOO Motorista</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}body{background:#f0f0f0}.topo{background:#000;color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:999}.sw{width:62px;height:34px;background:#444;border-radius:20px;position:relative;cursor:pointer}.sw.on{background:#00c853}.bola{width:28px;height:28px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:.3s}.sw.on .bola{left:31px}#map{height:60vh;width:100%}.card{background:#fff;margin:10px;border-radius:20px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,.15)}.btn{width:100%;padding:18px;border:none;border-radius:14px;font-weight:bold;font-size:18px;margin-top:10px;cursor:pointer}.btnVerde{background:#00c853;color:#fff}.btnCinza{background:#eee}.valorBig{font-size:40px;font-weight:bold;text-align:center;margin:12px 0}.linha{display:flex;justify-content:space-between;margin:7px 0;font-size:14px}.et{display:none}.et.on{display:block}</style>
+<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}body{background:#f0f0f0}.topo{background:#000;color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:999}.sw{width:62px;height:34px;background:#333;border-radius:20px;position:relative;cursor:pointer}.sw.on{background:#00c853}.bola{width:28px;height:28px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:.3s}.sw.on .bola{left:31px}#map{height:60vh;width:100%}.card{background:#fff;margin:10px;border-radius:20px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,.15)}.btn{width:100%;padding:20px;border:none;border-radius:14px;font-weight:bold;font-size:20px;margin-top:10px}.btnVerde{background:#00c853;color:#fff}.btnCinza{background:#eee;color:#333}.valorBig{font-size:42px;font-weight:bold;text-align:center;margin:10px 0}.linha{display:flex;justify-content:space-between;margin:6px 0}.et{display:none}.et.on{display:block}</style>
 </head><body>
-
-<div class="topo"><div><b>🚗 VOO MOTORISTA</b><br><small>Conquista - BA</small> • R$ <span id="saldo">0,00</span></div><div style="text-align:center"><div class="sw" id="sw" onclick="toggleOnline()"><div class="bola"></div></div><br><small id="txtOn">OFFLINE</small></div></div>
-
+<div class="topo"><div><b>🚗 VOO MOTORISTA</b><br>Conquista • R$ <span id="saldo">0,00</span></div><div style="text-align:center"><div class="sw" id="sw" onclick="toggleOnline()"><div class="bola"></div></div><br><small id="txtOn">OFFLINE</small></div></div>
 <div id="map"></div>
-
-<div class="card et on" id="boxOff"><div style="text-align:center"><div style="background:#000;color:#fff;display:inline-block;padding:8px 16px;border-radius:20px;font-weight:bold" id="pill">🔴 Você está OFFLINE</div><br><br><b id="msg">Fique ONLINE para tocar corrida</b><br><small>GPS Grátis Ativo - Dentro do App</small></div></div>
-
-<div class="card et" id="boxOn" style="border:2px solid #00c853">
-<div style="display:flex;justify-content:space-between"><b>🔔 NOVA CORRIDA TOCANDO</b><span style="background:#000;color:#fff;padding:5px 10px;border-radius:8px;font-weight:bold" id="kmTop">0 km</span></div><br>
-<b id="pax">Maria Silva</b> <span id="estrela">⭐ 4.9</span><br><hr style="margin:10px 0">
-<div style="background:#fff7e6;padding:10px;border-radius:12px;border-left:5px solid #ff8c00"><b>📍 BUSCAR:</b> <span id="buscar">Av. Olivia Flores, 300</span><br><small>🟠 <b id="kmB">0 km</b> até passageiro</small></div>
-<div style="background:#eef5ff;padding:10px;border-radius:12px;border-left:5px solid #0a2540;margin-top:8px"><b>🏁 LEVAR:</b> <span id="levar">Shopping Conquista Sul</span><br><small>🔵 <b id="kmL">0 km</b> de viagem</small></div>
-<div style="background:#f5f5f5;padding:12px;border-radius:12px;margin-top:10px"><div class="linha"><span>📏 Total buscar + levar</span><b id="kmT">0 km</b></div><div class="linha"><span>⏱️ Tempo total</span><b id="tempo">0 min</b></div><div class="linha"><span>💲 Valor por km</span><b>R$ 1,80/km</b></div><div class="linha"><span>🚩 Bandeirada</span><span>R$ 2,50</span></div></div>
-<div class="valorBig" id="valor">R$ 0,00</div><center><small>Você recebe 100%</small></center>
-<button class="btn btnVerde" onclick="aceitar()">✅ ACEITAR E NAVEGAR</button>
+<div class="card et on" id="boxOff"><center><div style="background:#000;color:#fff;padding:8px 16px;border-radius:20px;display:inline-block;font-weight:bold" id="pill">🔴 OFFLINE</div><br><br><b id="msg">Fique ONLINE para tocar corrida</b></center></div>
+<div class="card et" id="boxOn" style="border:3px solid #00c853">
+<div style="display:flex;justify-content:space-between"><b>🔔 NOVA CORRIDA</b><b style="background:#000;color:#fff;padding:6px 12px;border-radius:8px" id="kmTop">0 km</b></div><br>
+<b id="pax">Maria Silva</b> ⭐ 4.9<br><hr style="margin:10px 0">
+<div style="background:#fff7e6;padding:10px;border-radius:12px;border-left:5px solid orange"><b>📍 BUSCAR:</b> <span id="buscar">Av. Olivia Flores, 300</span><br><small>🟠 <span id="kmB">0 km</span> até passageiro</small></div>
+<div style="background:#eef5ff;padding:10px;border-radius:12px;border-left:5px solid #0a2540;margin-top:8px"><b>🏁 LEVAR:</b> <span id="levar">Shopping Sul</span><br><small>🔵 <span id="kmL">0 km</span> viagem</small></div>
+<div style="background:#f5f5f5;padding:12px;border-radius:12px;margin-top:10px"><div class="linha"><span>📏 Total</span><b id="kmT">0 km</b></div><div class="linha"><span>⏱️ Tempo</span><b id="tempo">0</b></div><div class="linha"><span>💲 R$/km</span><b>R$ 1,80/km</b></div></div>
+<div class="valorBig" id="valor">R$ 0,00</div>
+<button class="btn btnVerde" onclick="aceitar()">✅ ACEITAR</button>
 <button class="btn btnCinza" onclick="recusar()">❌ RECUSAR</button>
 </div>
-
-<div class="card et" id="boxRun" style="border:2px solid #000;text-align:center"><h2>🚗 EM CORRIDA</h2><b id="runNome">Maria</b> - <span id="runValor">R$ 0</span><br><br><div style="background:#000;color:#00ff88;padding:14px;border-radius:12px"><b>🗺️ GPS NAVEGANDO AUTOMÁTICO</b><br><span id="nav">Indo buscar passageiro...</span></div><br><button class="btn btnVerde" onclick="finalizar()">🏁 FINALIZAR CORRIDA</button></div>
-
+<div class="card et" id="boxRun" style="border:3px solid #000;text-align:center"><h2>🚗 EM CORRIDA</h2><b id="runNome">Maria</b> - <span id="runValor">R$ 0</span><br><br><div style="background:#000;color:#00ff88;padding:14px;border-radius:12px"><b>🗺️ NAVEGANDO AUTOMATICO</b><br><span id="nav">Indo buscar...</span></div><br><button class="btn btnVerde" onclick="finalizar()">🏁 FINALIZAR</button></div>
 <script>
 let map=L.map('map',{zoomControl:false}).setView([-14.866,-40.839],14)
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
 let eu=L.marker([-14.866,-40.839]).addTo(map)
-let mk1=null,mk2=null,linha=null,online=false,saldo=0,dados=null
-let paxLat=0,paxLng=0
-
+let mk1=null,mk2=null,linha=null,online=false,saldo=0,dados=null,paxLat=0,paxLng=0
 if(navigator.geolocation){navigator.geolocation.watchPosition(p=>{eu.setLatLng([p.coords.latitude,p.coords.longitude])},null,{enableHighAccuracy:true})}
-
-function toggleOnline(){
- online=!online
- let sw=document.getElementById('sw'),txt=document.getElementById('txtOn'),pill=document.getElementById('pill'),msg=document.getElementById('msg')
- if(online){sw.classList.add('on');txt.innerText='ONLINE';pill.innerText='🟢 Você está ONLINE';pill.style.background='#00c853';msg.innerText='Procurando corridas em Conquista...';document.getElementById('boxOff').classList.add('on');buscar()}else{sw.classList.remove('on');txt.innerText='OFFLINE';pill.innerText='🔴 Você está OFFLINE';pill.style.background='#000';msg.innerText='Fique ONLINE para tocar corrida';document.getElementById('boxOn').classList.remove('on');document.getElementById('boxRun').classList.remove('on');document.getElementById('boxOff').classList.add('on');if(linha)map.removeLayer(linha)}
-}
-function buscar(){
- if(!online)return
- setTimeout(()=>{
-  if(!online)return
-  let b=(Math.random()*1.5+0.3).toFixed(1),l=(Math.random()*4+1).toFixed(1),t=(parseFloat(b)+parseFloat(l)).toFixed(1),v=(2.5+parseFloat(t)*1.8).toFixed(2)
-  dados={b,l,t,v}
-  document.getElementById('kmB').innerText=b+' km';document.getElementById('kmL').innerText=l+' km';document.getElementById('kmT').innerText=t+' km';document.getElementById('kmTop').innerText=t+' km';document.getElementById('tempo').innerText=Math.round(t*3+5)+' min';document.getElementById('valor').innerText='R$ '+v.replace('.',',')
-  let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng; paxLat=lat+(Math.random()*0.01-0.005);paxLng=lng+(Math.random()*0.01-0.005);let dLat=paxLat+(Math.random()*0.02-0.01),dLng=paxLng+(Math.random()*0.02-0.01)
-  if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha)
-  mk1=L.marker([paxLat,paxLng]).addTo(map);mk2=L.marker([dLat,dLng]).addTo(map);linha=L.polyline([[lat,lng],[paxLat,paxLng],[dLat,dLng]],{color:'#0066ff',weight:6}).addTo(map);map.fitBounds(linha.getBounds(),{padding:[40,40]})
-  document.getElementById('boxOff').classList.remove('on');document.getElementById('boxOn').classList.add('on')
- },2000)
-}
+function toggleOnline(){online=!online;let sw=document.getElementById('sw'),txt=document.getElementById('txtOn'),pill=document.getElementById('pill'),msg=document.getElementById('msg');if(online){sw.classList.add('on');txt.innerText='ONLINE';pill.innerText='🟢 ONLINE';pill.style.background='#00c853';msg.innerText='Procurando corridas...';buscar()}else{sw.classList.remove('on');txt.innerText='OFFLINE';pill.innerText='🔴 OFFLINE';pill.style.background='#000';msg.innerText='Fique ONLINE';document.getElementById('boxOn').classList.remove('on');document.getElementById('boxRun').classList.remove('on');document.getElementById('boxOff').classList.add('on');if(linha)map.removeLayer(linha)}}
+function buscar(){if(!online)return;setTimeout(()=>{if(!online)return;let b=(Math.random()*1.5+0.3).toFixed(1),l=(Math.random()*4+1).toFixed(1),t=(parseFloat(b)+parseFloat(l)).toFixed(1),v=(2.5+parseFloat(t)*1.8).toFixed(2);dados={b,l,t,v};document.getElementById('kmB').innerText=b+' km';document.getElementById('kmL').innerText=l+' km';document.getElementById('kmT').innerText=t+' km';document.getElementById('kmTop').innerText=t+' km';document.getElementById('tempo').innerText=Math.round(t*3+5)+' min';document.getElementById('valor').innerText='R$ '+v.replace('.',',');let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng;paxLat=lat+(Math.random()*0.01-0.005);paxLng=lng+(Math.random()*0.01-0.005);let dLat=paxLat+(Math.random()*0.02-0.01),dLng=paxLng+(Math.random()*0.02-0.01);if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha);mk1=L.marker([paxLat,paxLng]).addTo(map);mk2=L.marker([dLat,dLng]).addTo(map);linha=L.polyline([[lat,lng],[paxLat,paxLng],[dLat,dLng]],{color:'#0066ff',weight:6}).addTo(map);map.fitBounds(linha.getBounds(),{padding:[40,40]});document.getElementById('boxOff').classList.remove('on');document.getElementById('boxOn').classList.add('on')},2000)}
 function aceitar(){
- // JÁ ABRE GPS AUTOMATICO - SEM BOTÃO ZAP
- document.getElementById('boxOn').classList.remove('on')
- document.getElementById('boxRun').classList.add('on')
- document.getElementById('runNome').innerText=document.getElementById('pax').innerText
- document.getElementById('runValor').innerText=document.getElementById('valor').innerText
- document.getElementById('nav').innerText=document.getElementById('kmB').innerText+' até passageiro - Navegando...'
- map.setView([paxLat,paxLng],16)
- // ABRE GOOGLE MAPS SOZINHO
- let o=eu.getLatLng().lat+','+eu.getLatLng().lng
- let d=paxLat+','+paxLng
- let url='https://www.google.com/maps/dir/?api=1&origin='+o+'&destination='+d+'&travelmode=driving'
- setTimeout(()=>{window.open(url,'_blank')},500)
+ document.getElementById('boxOn').classList.remove('on');document.getElementById('boxRun').classList.add('on');
+ document.getElementById('runNome').innerText=document.getElementById('pax').innerText;
+ document.getElementById('runValor').innerText=document.getElementById('valor').innerText;
+ document.getElementById('nav').innerText=document.getElementById('kmB').innerText+' ate passageiro';
+ let o=eu.getLatLng().lat+','+eu.getLatLng().lng;
+ let d=paxLat+','+paxLng;
+ let url='https://www.google.com/maps/dir/?api=1&origin='+o+'&destination='+d+'&travelmode=driving';
+ window.location.href=url;
 }
 function recusar(){document.getElementById('boxOn').classList.remove('on');document.getElementById('boxOff').classList.add('on');buscar()}
 function finalizar(){saldo+=parseFloat(dados.v);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');document.getElementById('boxRun').classList.remove('on');document.getElementById('boxOff').classList.add('on');if(linha)map.removeLayer(linha);setTimeout(buscar,1500)}
