@@ -1,1 +1,69 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOO - Motorista PRO</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+body{font-family:Arial;background:#0f172a;color:#fff;margin:0;padding:12px}
+.card{max-width:560px;margin:auto;background:#1e293b;padding:20px;border-radius:18px;border:2px solid #38bdf8}
+h1{color:#38bdf8;text-align:center;margin:0}
+label{display:block;margin-top:14px;font-weight:700}
+input{width:100%;padding:12px;margin-top:6px;border-radius:10px;border:0;box-sizing:border-box}
+.upload{border:2px dashed #38bdf8;padding:14px;border-radius:12px;text-align:center;margin-top:8px;background:#0f172a}
+button{width:100%;padding:16px;margin-top:20px;background:#22c55e;color:#000;font-weight:900;font-size:18px;border:0;border-radius:12px}
+.alert{padding:14px;border-radius:10px;margin-top:14px;display:none;font-weight:700}
+.ok{background:#22c55e;color:#000;display:block}
+.erro{background:#ef4444;color:#fff;display:block}
+.load{background:#334155;color:#38bdf8;display:block}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>🚗 VOO - Motorista PRO</h1>
+<p style="text-align:center;color:#94a3b8">Leitura automática de CNH com EAR</p>
+<label>Nome Completo</label><input id="nome" placeholder="Nome da CNH">
+<label>Ano do Veículo</label><input id="ano" type="number" placeholder="2015">
+<label>Placa</label><input id="placa" placeholder="ABC1D23">
+<label>1. CNH FRENTE</label><div class="upload"><input type="file" id="cnhFrente" accept="image/*"></div>
+<label>2. CNH VERSO (onde tem EAR)</label><div class="upload"><input type="file" id="cnhVerso" accept="image/*"></div>
+<label>3. CRLV</label><div class="upload"><input type="file" id="crlv" accept="image/*"></div>
+<div id="status" class="alert load" style="display:block">Aguardando arquivos...</div>
+<div id="resultado" class="alert"></div>
+<button onclick="analisar()">🔍 ANALISAR AUTOMATICAMENTE</button>
+<p style="text-align:center;margin-top:12px"><a href="index.html" style="color:#38bdf8">← Voltar pro site</a></p>
+</div>
+<script>
+async function ler(f,txt){
+document.getElementById('status').style.display='block';
+document.getElementById('status').innerText='Lendo '+txt+'... aguarde 10s...';
+const r=await Tesseract.recognize(f,'por');
+return r.data.text.toUpperCase();
+}
+async function analisar(){
+const ano=parseInt(document.getElementById('ano').value);
+const f1=document.getElementById('cnhFrente').files[0];
+const f2=document.getElementById('cnhVerso').files[0];
+const f3=document.getElementById('crlv').files[0];
+const res=document.getElementById('resultado');
+const status=document.getElementById('status');
+const nome=document.getElementById('nome').value;
+if(!nome||!ano||!f1||!f2||!f3){res.className='alert erro';res.innerText='❌ Preencha nome, ano e as 3 fotos!';return;}
+if(ano<2012){res.className='alert erro';res.innerText='❌ REPROVADO: Ano '+ano+' - Só 2012 pra cima';return;}
+try{
+const t1=await ler(f1,'CNH frente');
+status.innerText='Etapa 2/2: Lendo verso com EAR...';
+const t2=await ler(f2,'CNH verso');
+const temEAR=t2.includes('REMUNERADA')||t1.includes('REMUNERADA')||t2.includes('EAR')||t1.includes('EAR');
+if(!temEAR){res.className='alert erro';res.innerText='❌ REPROVADO: Sem EAR na CNH';status.style.display='none';return;}
+res.className='alert ok';
+if(ano>=2015){res.innerText='✅ APROVADO! Ano '+ano+' + EAR OK! Motorista: '+nome+' - Liberado VOO!';}
+else{res.innerText='⚠️ PRÉ-APROVADO! Ano '+ano+' (2012-2014) vai pra análise humana';}
+status.style.display='none';
+}catch(e){res.className='alert erro';res.innerText='Erro leitura: '+e.message;}
+}
+</script>
+</body>
+</html>
