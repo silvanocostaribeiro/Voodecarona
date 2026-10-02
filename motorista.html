@@ -1,111 +1,159 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>VOO Motorista - FINAL Conquista</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>VOO - Igual Uber</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
-body{background:#fff;overflow:hidden}
-#map{position:absolute;top:0;left:0;width:100%;height:100vh;z-index:1}
-.topo{position:absolute;top:0;left:0;right:0;z-index:1000;background:#000;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
-.saldo{font-weight:900;color:#00ff88}
-.btnOn{padding:10px 18px;border-radius:30px;border:none;font-weight:900;background:#333;color:#fff}
-.btnOn.on{background:#00c853;color:#000}
-.nav{position:absolute;top:58px;left:10px;right:10px;z-index:900;background:#fff;border-radius:16px;padding:12px 16px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.3)}
-.sheet{position:absolute;bottom:0;left:0;right:0;z-index:1000;background:#fff;border-radius:28px 28px 0 0;padding-bottom:20px;box-shadow:0 -5px 30px rgba(0,0,0,.3)}
-.handle{width:44px;height:5px;background:#ddd;border-radius:10px;margin:12px auto}
-.cont{padding:0 20px}
-.preco{font-size:38px;font-weight:900}
-.timer{height:5px;background:#eee;border-radius:10px;margin:8px 0;overflow:hidden}
-.timer div{height:100%;background:#00c853;width:100%;transition:1s linear}
-.btn{width:100%;padding:18px;border:none;border-radius:14px;font-weight:900;font-size:16px;margin-top:10px}
-.btnBlack{background:#000;color:#fff}.btnGreen{background:#00c853;color:#000}.btnRed{background:#fff;color:#c00;border:2px solid #ffcccc}
-#fab{position:absolute;z-index:1100;left:16px;right:16px;display:none;flex-direction:column;gap:8px;bottom:16px}
-.fabBtn{padding:16px;border:none;border-radius:16px;font-weight:900;box-shadow:0 4px 15px rgba(0,0,0,.2)}
-.chat{position:absolute;bottom:0;left:0;right:0;z-index:1200;background:#fff;border-radius:28px 28px 0 0;display:none;flex-direction:column;max-height:85vh;box-shadow:0 -5px 30px rgba(0,0,0,.4)}
-.chatHead{background:#000;color:#fff;padding:16px;border-radius:28px 28px 0 0;display:flex;justify-content:space-between}
-.msgs{padding:16px;overflow-y:auto;flex:1;min-height:280px}
-.msg{padding:10px 14px;border-radius:18px;margin:6px 0;max-width:80%;font-size:14px}
-.eu{background:#000;color:#fff;margin-left:auto}.out{background:#eee}
-.bairroG{font-size:19px;font-weight:900}
+*{margin:0;padding:0;box-sizing:border-box;font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial}
+body{background:#000;overflow:hidden;touch-action:none}
+#map{position:absolute;inset:0;z-index:1}
+.topo{position:absolute;top:0;left:0;right:0;z-index:1000;background:#000;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.saldo{font-weight:900;color:#fff}.saldo b{color:#00ff88}
+.btnOn{padding:10px 20px;border-radius:24px;border:none;font-weight:900;background:#222;color:#fff;border:1px solid #444}
+.btnOn.on{background:#fff;color:#000}
+
+/* SHEET ESTILO UBER */
+#sheet{position:absolute;left:0;right:0;bottom:0;z-index:1100;background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.5);transform:translateY(0);transition:transform 0.3s cubic-bezier(0.2,0.8,0.2,1);touch-action:none;max-height:92vh;overflow:hidden;display:flex;flex-direction:column}
+.handleArea{padding:12px 0 6px;display:flex;justify-content:center;align-items:center;cursor:grab}
+.handle{width:40px;height:5px;background:#d1d1d1;border-radius:10px}
+.sheetCont{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;padding:0 20px 24px}
+
+/* Componentes Uber */
+.uber-timer{display:flex;align-items:center;gap:12px;margin:8px 0}
+.circle{width:48px;height:48px;border:4px solid #eee;border-top-color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.price{font-size:42px;font-weight:900;letter-spacing:-1px}
+.badge{display:inline-block;background:#000;color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800}
+.route{position:relative;padding-left:28px;margin:14px 0}
+.route:before{content:'';position:absolute;left:8px;top:8px;bottom:8px;width:2px;background:repeating-linear-gradient(#000,#000 6px,transparent 6px,transparent 12px)}
+.dot{position:absolute;left:2px;width:14px;height:14px;border-radius:50%;border:3px solid #000;background:#fff}
+.dot.start{top:0}.dot.end{bottom:0;background:#000}
+.uberAddr{font-size:16px;font-weight:700;margin:6px 0}
+.uberSub{font-size:13px;color:#666}
+.riderRow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #eee;margin-top:12px}
+.avatar{width:44px;height:44px;background:#eee;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900}
+.stars{font-size:12px;background:#000;color:#fff;padding:2px 6px;border-radius:10px}
+
+.btnUber{width:100%;padding:18px;border:none;border-radius:12px;font-weight:900;font-size:16px;margin-top:10px}
+.btnGreen{background:#000;color:#fff}.btnBlack{background:#000;color:#fff}
+.btnOutline{background:#fff;color:#000;border:1px solid #ddd}
+.btnRedText{color:#c00;background:#fff;border:none;font-weight:700}
+.actions{display:flex;gap:12px;margin-top:14px}
+.actBtn{flex:1;background:#f2f2f2;border:none;border-radius:30px;padding:14px 8px;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px}
+
+/* Slider estilo Uber - arrasta pra iniciar */
+.sliderUber{position:relative;background:#000;border-radius:30px;height:56px;display:flex;align-items:center;padding:4px;margin-top:16px;overflow:hidden}
+.sliderTrack{color:#fff;font-weight:800;text-align:center;flex:1;letter-spacing:1px}
+.sliderThumb{position:absolute;left:4px;width:48px;height:48px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;touch-action:none;z-index:2}
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="topo"><div>🚗 VOO • R$ <span class="saldo" id="saldo">0,00</span></div><button class="btnOn" id="btnOn" onclick="toggle()">FICAR ONLINE</button></div>
-<div class="nav" id="nav"><b id="navTxt">Pronto pra rodar</b><br><small id="navSub">Aguardando corrida em Conquista</small></div>
+<div class="topo"><div class="saldo">🚗 VOO • R$ <span id="saldo">0,00</span></div><button class="btnOn" id="btnOn" onclick="toggle()">FICAR OFFLINE</button></div>
 
-<div id="fab">
-<button class="fabBtn" id="bChegou" style="background:#00c853;display:none" onclick="chegueiLocal()">📍 CHEGUEI NO PASSAGEIRO</button>
-<button class="fabBtn" id="bIniciar" style="background:#000;color:#fff;display:none" onclick="iniciarCorrida()">▶️ INICIAR CORRIDA</button>
-<button class="fabBtn" id="bDestino" style="background:#00c853;display:none" onclick="chegueiDestino()">🏁 CHEGUEI NO DESTINO</button>
-<div style="display:flex;gap:8px"><button class="fabBtn" style="flex:1;background:#fff" onclick="abrirChat()">💬 CHAT</button><button class="fabBtn" style="flex:1;background:#fff" onclick="minimizar()">▼ MAPA</button></div>
-<button class="fabBtn" style="background:#ff4444;color:#fff" onclick="cancelar()">❌ CANCELAR</button>
+<div id="sheet">
+<div class="handleArea" id="handleArea"><div class="handle"></div></div>
+<div class="sheetCont" id="sheetCont">
+<!-- CONTEUDO MUDA AQUI DENTRO - IGUAL UBER -->
 </div>
-
-<div class="sheet" id="sNova" style="display:none"><div class="handle"></div><div class="cont">
-<div style="display:flex;justify-content:space-between"><span id="kmTop" style="background:#000;color:#0f8;padding:4px 10px;border-radius:20px;font-size:12px">0 km</span><span id="timeTop" style="font-weight:900">15s</span></div>
-<div class="timer"><div id="bar"></div></div>
-<div class="preco" id="valor">R$ 0,00</div>
-<div id="formaTop" style="font-weight:800;margin:4px 0"></div>
-<div style="background:#f6f6f6;padding:12px;border-radius:12px;margin:8px 0">
-📍 BUSCAR EM: <span class="bairroG" id="endB">Candeias</span> - <b id="kmB"></b><br>
-🏁 LEVAR PARA: <span class="bairroG" style="color:#00c853" id="endD">Centro</span> - <b id="kmL"></b>
 </div>
-<small>👤 Passageiro 4.9⭐</small><br>
-<button class="btn btnBlack" onclick="aceitar()">✅ ACEITAR - 1 TOQUE</button>
-<button class="btn btnRed" onclick="recusar()">❌ RECUSAR</button>
-</div></div>
-
-<div class="sheet" id="sCorrida" style="display:none"><div class="handle"></div><div class="cont">
-<h3>Corrida em andamento</h3>
-<p>📍 <span id="endB2" class="bairroG"></span> - <b id="kmB2"></b></p>
-<p>🏁 <span id="endD2" class="bairroG" style="color:#00c853"></span> - <b id="kmL2"></b></p>
-<p>💰 <b id="valor2"></b> - <span id="forma2"></span></p>
-</div></div>
-
-<div class="sheet" id="sPag" style="display:none"><div class="handle"></div><div class="cont" style="text-align:center">
-<h2 id="pagTitulo">💰 RECEBER</h2>
-<div class="preco" id="pagV"></div>
-<p id="pagInfo" style="font-weight:800;margin:8px 0"></p>
-<div id="areaDinheiro" style="display:none">
-<p style="background:#fff3cd;padding:12px;border-radius:10px">⚠️ COBRAR EM DINHEIRO NA MÃO</p>
-<button class="btn btnBlack" onclick="finalizar()">✅ DINHEIRO RECEBIDO</button>
-</div>
-<div id="areaPix" style="display:none">
-<p style="background:#d4edda;padding:12px;border-radius:10px">💠 PIX - Mostrar pro passageiro pagar</p>
-<div style="width:200px;height:200px;background:#fff;border:2px dashed #000;margin:10px auto;display:flex;align-items:center;justify-content:center;font-weight:900;text-align:center">QR CODE<br><span id="qrValor"></span><br>PIX: VOO</div>
-<button class="btn btnGreen" onclick="finalizar()">✅ PIX RECEBIDO</button>
-</div>
-</div></div>
-
-<div class="chat" id="chat"><div class="chatHead"><span>💬 Passageiro</span><span onclick="fecharChat()" style="font-size:20px">✕</span></div><div class="msgs" id="msgs"><div class="msg out">Olá! Tô te esperando na porta</div></div><div style="padding:10px;display:flex;gap:8px;border-top:1px solid #eee"><input id="inp" placeholder="Digite..." style="flex:1;padding:14px;border-radius:20px;border:1px solid #ddd"><button onclick="enviar()" style="background:#000;color:#fff;border:none;padding:12px 16px;border-radius:20px;font-weight:900">Enviar</button></div></div>
 
 <script>
 let map=L.map('map',{zoomControl:false,attributionControl:false}).setView([-14.866,-40.839],16)
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
 let eu=L.marker([-14.866,-40.839]).addTo(map)
-let mk1,mk2,linha,online=false,corridaAtiva=false,saldo=Number(localStorage.getItem('saldo')||0),dados={},timerInt,somInterval=null
+let mk1,mk2,linha,online=true,saldo=Number(localStorage.getItem('saldo')||0),dados={},timerInt,somInterval,estado='oferta',startY=0,currentY=0,isDragging=false,sheetStart=0
 document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',')
+
+// DRAG IGUAL UBER
+const sheet=document.getElementById('sheet')
+const handle=document.getElementById('handleArea')
+function onDragStart(e){isDragging=true;startY=e.touches?e.touches[0].clientY:e.clientY;sheetStart=sheet.getBoundingClientRect().top;sheet.style.transition='none'}
+function onDragMove(e){if(!isDragging)return;let y=e.touches?e.touches[0].clientY:e.clientY;let diff=y-startY;let newTop=Math.max(window.innerHeight*0.08,Math.min(window.innerHeight*0.85,sheetStart+diff));sheet.style.transform=`translateY(${newTop-(window.innerHeight*0.08)}px)`}
+function onDragEnd(e){isDragging=false;sheet.style.transition='transform 0.3s cubic-bezier(0.2,0.8,0.2,1)';let y=e.changedTouches?e.changedTouches[0].clientY:e.clientY;let diff=y-startY;if(diff>80){sheet.style.transform='translateY(70%)'}else if(diff<-80){sheet.style.transform='translateY(0)'}else{sheet.style.transform='translateY(0)'}}
+handle.addEventListener('touchstart',onDragStart);handle.addEventListener('touchmove',onDragMove);handle.addEventListener('touchend',onDragEnd)
+handle.addEventListener('mousedown',onDragStart);window.addEventListener('mousemove',onDragMove);window.addEventListener('mouseup',onDragEnd)
+
+function tocar(){try{if(somInterval)clearInterval(somInterval);let ctx=new(window.AudioContext||window.webkitAudioContext)();function bip(){let o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='square';o.frequency.value=950;g.gain.setValueAtTime(1,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.4);o.start();o.stop(ctx.currentTime+0.4)}bip();somInterval=setInterval(bip,1200);if(navigator.vibrate)navigator.vibrate([300,100,300])}catch(e){}}
+function pararSom(){if(somInterval){clearInterval(somInterval);somInterval=null}}
+
+function render(){
+let c=document.getElementById('sheetCont')
+if(estado=='oferta'){
+c.innerHTML=`
+<div class="uber-timer"><div class="circle" id="sec">15</div><div><b>VOO • ${dados.bairroBusca} → ${dados.bairroLeva}</b><br><span class="uberSub">${dados.distTotal}km • ${dados.tempo}min • 4.9⭐</span></div><span class="badge" style="margin-left:auto">${dados.forma}</span></div>
+<div class="price">R$ ${dados.v}</div>
+<div class="route"><div class="dot start"></div><div class="uberAddr">${dados.bairroBusca} - ${dados.ruaB}</div><div class="uberSub">${dados.kmB}km de você</div><div style="height:20px"></div><div class="dot end"></div><div class="uberAddr">${dados.bairroLeva} - ${dados.ruaD}</div><div class="uberSub">${dados.kmL}km de viagem</div></div>
+<div class="riderRow"><div class="avatar">👤</div><div><b>Passageiro</b> • <span class="stars">4.9 ★</span><br><span class="uberSub">120 corridas • Sem dinheiro trocado</span></div></div>
+<button class="btnUber btnGreen" onclick="aceitar()">ACEITAR</button>
+<button class="btnUber btnRedText" onclick="recusar()">Recusar</button>
+`
+iniciaTimer()
+}else if(estado=='embarque'){
+c.innerHTML=`
+<div style="display:flex;justify-content:space-between"><b> indo buscar em ${dados.bairroBusca}</b><span style="font-weight:900">${dados.kmB}km • 4 min</span></div>
+<div class="route"><div class="dot start"></div><div class="uberAddr">${dados.ruaB}, ${dados.bairroBusca}</div><div class="uberSub">Cliente na porta - Casa amarela</div></div>
+<div class="riderRow"><div class="avatar">👤</div><div><b>Carlos</b> • 4.9 ★ • 120 corridas<br><span class="uberSub">Não tem troco para R$ 50</span></div><div style="margin-left:auto">📞</div></div>
+<div class="actions"><button class="actBtn" onclick="abrirChat()">💬<span>Chat</span></button><button class="actBtn">📞<span>Ligar</span></button><button class="actBtn" onclick="cancelar()">❌<span>Cancelar</span></button><button class="actBtn">🗺️<span>Navegar</span></button></div>
+<div class="sliderUber" id="slider"><div class="sliderTrack">ARRASTE PARA CHEGUEI →</div><div class="sliderThumb" id="thumb">📍</div></div>
+`
+initSlider(()=>{estado='chegou';render()})
+}else if(estado=='chegou'){
+c.innerHTML=`
+<div style="text-align:center;padding:10px 0"><b>Você chegou</b><br><span class="uberSub">Aguardando ${dados.bairroBusca}</span></div>
+<div class="riderRow"><div class="avatar">👤</div><div><b>Carlos</b> • 4.9 ★<br><span class="uberSub">Informe o passageiro que chegou</span></div></div>
+<div class="sliderUber" id="slider"><div class="sliderTrack">ARRASTE PARA INICIAR →</div><div class="sliderThumb" id="thumb">▶️</div></div>
+`
+initSlider(()=>{estado='viagem';render();map.fitBounds(linha.getBounds(),{padding:[80,80]})})
+}else if(estado=='viagem'){
+c.innerHTML=`
+<div style="display:flex;justify-content:space-between"><b> levendo para ${dados.bairroLeva}</b><span style="font-weight:900">${dados.kmL}km • ${dados.tempo}min</span></div>
+<div class="route"><div class="dot end"></div><div class="uberAddr">${dados.ruaD}, ${dados.bairroLeva}</div><div class="uberSub">${dados.forma} • R$ ${dados.v}</div></div>
+<div class="actions"><button class="actBtn">🛑<span>Parar</span></button><button class="actBtn">🗺️<span>Rota</span></button><button class="actBtn" onclick="abrirChat()">💬<span>Chat</span></button></div>
+<div class="sliderUber" id="slider"><div class="sliderTrack">ARRASTE PARA FINALIZAR →</div><div class="sliderThumb" id="thumb">🏁</div></div>
+`
+initSlider(()=>{estado='pagamento';render()})
+}else if(estado=='pagamento'){
+let isPix=dados.forma.includes('PIX')
+c.innerHTML=`
+<div style="text-align:center"><h2>${isPix?'💠 Receber no PIX':'💵 Receber em dinheiro'}</h2><div class="price">R$ ${dados.v}</div><p><b>${dados.forma} • ${dados.bairroBusca} → ${dados.bairroLeva}</b></p>
+${isPix?`<div style="width:200px;height:200px;border:2px dashed #000;margin:16px auto;display:flex;align-items:center;justify-content:center;font-weight:900">QR CODE<br>R$ ${dados.v}<br>PIX VOO</div><button class="btnUber btnGreen" onclick="finalizar()">CONFIRMAR PIX RECEBIDO</button>`:`<div style="background:#fff3cd;padding:12px;border-radius:12px;margin:12px 0">⚠️ Cobrar R$ ${dados.v} em mãos</div><button class="btnUber btnGreen" onclick="finalizar()">DINHEIRO RECEBIDO</button>`}
+</div>
+`
+}
+}
+
+function initSlider(cb){
+let thumb=document.getElementById('thumb'),track=document.getElementById('slider'),drag=false,startX=0
+function move(e){if(!drag)return;let x=(e.touches?e.touches[0].clientX:e.clientX)-startX;let max=track.offsetWidth-60;x=Math.max(0,Math.min(max,x));thumb.style.transform=`translateX(${x}px)`;if(x>=max-10){drag=false;cb()}}
+function start(e){drag=true;startX=(e.touches?e.touches[0].clientX:e.clientX)-thumb.getBoundingClientRect().left}
+thumb.addEventListener('touchstart',start);thumb.addEventListener('mousedown',start)
+window.addEventListener('touchmove',move);window.addEventListener('mousemove',move)
+window.addEventListener('touchend',()=>{if(drag){drag=false;thumb.style.transform='translateX(0)';thumb.style.transition='0.3s';setTimeout(()=>thumb.style.transition='',300)}})
+}
+
+function novaCorrida(){
+let bairros=['Centro','Candeias','Recreio','Brasil','Patagônia','Ibirapuera','Felícia','Morada Real','UrBis VI','Jatobá','Alto Maron','Guarani','Boa Vista']
+let b1=bairros[Math.floor(Math.random()*bairros.length)],b2=bairros[Math.floor(Math.random()*bairros.length)];while(b2==b1){b2=bairros[Math.floor(Math.random()*bairros.length)]}
+let b=(Math.random()*1+0.4).toFixed(1),l=(Math.random()*2.5+1).toFixed(1),t=(parseFloat(b)+parseFloat(l)).toFixed(1)
+let v=(3.5+parseFloat(t)*2.2).toFixed(2)
+dados={v:v.replace('.',','),vNum:v,forma:Math.random()>0.5?'DINHEIRO':'PIX',bairroBusca:b1,bairroLeva:b2,ruaB:'Rua São João 123',ruaD:'Av. Central 456',kmB:b,kmL:l,distTotal:t,tempo:Math.floor(Math.random()*8+5)}
+if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha)
+let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng;mk1=L.marker([lat+0.004,lng+0.004]).addTo(map);mk2=L.marker([lat+0.012,lng+0.012]).addTo(map);linha=L.polyline([[lat,lng],[lat+0.004,lng+0.004],[lat+0.012,lng+0.012]],{color:'#000',weight:6}).addTo(map);map.fitBounds(linha.getBounds(),{padding:[80,80]})
+estado='oferta';render();tocar();sheet.style.transform='translateY(0)'
+}
+function iniciaTimer(){let t=15;clearInterval(timerInt);timerInt=setInterval(()=>{t--;let el=document.getElementById('sec');if(el)el.innerText=t;if(t<=0){clearInterval(timerInt);recusar()}},1000)}
+function aceitar(){pararSom();clearInterval(timerInt);estado='embarque';render()}
+function recusar(){pararSom();clearInterval(timerInt);novaCorrida()}
+function finalizar(){saldo+=parseFloat(dados.vNum);localStorage.setItem('saldo',saldo);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');novaCorrida()}
+function cancelar(){estado='oferta';pararSom();novaCorrida()}
+function toggle(){if(online){online=false;document.getElementById('btnOn').innerText='FICAR ONLINE';document.getElementById('btnOn').classList.remove('on');sheet.style.display='none'}else{online=true;document.getElementById('btnOn').innerText='● ONLINE';document.getElementById('btnOn').classList.add('on');sheet.style.display='flex';novaCorrida()}}
+function abrirChat(){alert('💬 Chat: Tô na porta')}
 if(navigator.geolocation){navigator.geolocation.watchPosition(p=>{eu.setLatLng([p.coords.latitude,p.coords.longitude])},null,{enableHighAccuracy:true})}
-function toggle(){if(corridaAtiva){alert('⚠️ Você está em corrida! Finalize ou cancele antes de ficar offline.');return;}online=!online;let b=document.getElementById('btnOn');b.classList.toggle('on',online);b.innerText=online?'● ONLINE':'FICAR ONLINE';document.getElementById('nav').style.display=online?'block':'none';if(online)buscar();else location.reload()}
-function tocar(){try{if(somInterval)clearInterval(somInterval);let ctx=new(window.AudioContext||window.webkitAudioContext)();function bip(){let o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='square';o.frequency.value=950;g.gain.setValueAtTime(1,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.5);o.start();o.stop(ctx.currentTime+0.5);setTimeout(()=>{let o2=ctx.createOscillator(),g2=ctx.createGain();o2.connect(g2);g2.connect(ctx.destination);o2.type='square';o2.frequency.value=1200;g2.gain.setValueAtTime(1,ctx.currentTime);g2.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.5);o2.start();o2.stop(ctx.currentTime+0.5)},200)}bip();somInterval=setInterval(bip,1300);if(navigator.vibrate)navigator.vibrate([300,100,300,100,500])}catch(e){}}
-function pararSom(){if(somInterval){clearInterval(somInterval);somInterval=null}if(navigator.vibrate)navigator.vibrate(0)}
-function buscar(){corridaAtiva=false;document.getElementById('sNova').style.display='none';document.getElementById('fab').style.display='none';document.getElementById('sCorrida').style.display='none';document.getElementById('sPag').style.display='none';if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha)
-setTimeout(()=>{let bairros=['Centro','Candeias','Recreio','Brasil','Patagônia','Ibirapuera','Felícia','Morada Real','UrBis VI','Jatobá','Alto Maron','Guarani','Boa Vista'];let b1=bairros[Math.floor(Math.random()*bairros.length)],b2=bairros[Math.floor(Math.random()*bairros.length)];while(b2==b1){b2=bairros[Math.floor(Math.random()*bairros.length)]}let b=(Math.random()*1+0.4).toFixed(1),l=(Math.random()*2.5+1).toFixed(1),t=(parseFloat(b)+parseFloat(l)).toFixed(1),v=(3.5+parseFloat(t)*2.2).toFixed(2);dados={v:v,forma:Math.random()>0.5?'DINHEIRO':'PIX PAGO',bairroBusca:b1,bairroLeva:b2};document.getElementById('kmB').innerText=b+'km';document.getElementById('kmL').innerText=l+'km';document.getElementById('endB').innerText=b1;document.getElementById('endD').innerText=b2;document.getElementById('endB2').innerText=b1;document.getElementById('endD2').innerText=b2;document.getElementById('kmTop').innerText=t+'km';document.getElementById('valor').innerText='R$ '+v.replace('.',',');document.getElementById('valor2').innerText='R$ '+v.replace('.',',');document.getElementById('formaTop').innerText=dados.forma+' • '+b1+' → '+b2;document.getElementById('forma2').innerText=dados.forma;let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng;mk1=L.marker([lat+0.004,lng+0.004]).addTo(map);mk2=L.marker([lat+0.012,lng+0.012]).addTo(map);linha=L.polyline([[lat,lng],[lat+0.004,lng+0.004],[lat+0.012,lng+0.012]],{color:'#00c853',weight:6}).addTo(map);map.fitBounds(linha.getBounds(),{padding:[80,80]});document.getElementById('sNova').style.display='block';tocar();iniciaTimer()},1200)}
-function iniciaTimer(){let t=15;clearInterval(timerInt);document.getElementById('bar').style.width='100%';timerInt=setInterval(()=>{t--;document.getElementById('timeTop').innerText=t+'s';document.getElementById('bar').style.width=(t/15*100)+'%';if(t<=0){clearInterval(timerInt);pararSom();recusar()}},1000)}
-function aceitar(){pararSom();corridaAtiva=true;clearInterval(timerInt);document.getElementById('sNova').style.display='none';document.getElementById('sCorrida').style.display='block';document.getElementById('fab').style.display='flex';document.getElementById('bChegou').style.display='block';document.getElementById('bIniciar').style.display='none';document.getElementById('bDestino').style.display='none';document.getElementById('navTxt').innerText='A caminho: '+dados.bairroBusca;map.setView(eu.getLatLng(),18)}
-function recusar(){pararSom();clearInterval(timerInt);document.getElementById('sNova').style.display='none';buscar()}
-function minimizar(){document.getElementById('sCorrida').style.display='none'}
-function cancelar(){let m=prompt('Cancelar?\n1-Carro quebrou\n2-Pneu\n3-Engano\n4-Passageiro não apareceu');if(m){corridaAtiva=false;pararSom();buscar()}}
-function chegueiLocal(){document.getElementById('bChegou').style.display='none';document.getElementById('bIniciar').style.display='block'}
-function iniciarCorrida(){if(mk1)map.removeLayer(mk1);let dest=linha.getLatLngs()[2];linha.setLatLngs([eu.getLatLng(),dest]);map.fitBounds(linha.getBounds(),{padding:[60,60]});document.getElementById('bIniciar').style.display='none';document.getElementById('bDestino').style.display='block';document.getElementById('navTxt').innerText='Levando para: '+dados.bairroLeva;document.getElementById('sCorrida').style.display='none'}
-function chegueiDestino(){document.getElementById('fab').style.display='none';document.getElementById('sPag').style.display='block';document.getElementById('pagV').innerText=document.getElementById('valor').innerText;document.getElementById('pagInfo').innerText=dados.forma+' - '+dados.bairroBusca+' → '+dados.bairroLeva;document.getElementById('qrValor').innerText=document.getElementById('valor').innerText;if(dados.forma.includes('DINHEIRO')){document.getElementById('areaDinheiro').style.display='block';document.getElementById('areaPix').style.display='none';document.getElementById('pagTitulo').innerText='💵 RECEBER EM DINHEIRO'}else{document.getElementById('areaDinheiro').style.display='none';document.getElementById('areaPix').style.display='block';document.getElementById('pagTitulo').innerText='💠 RECEBER NO PIX'}}
-function finalizar(){saldo+=parseFloat(dados.v);localStorage.setItem('saldo',saldo);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');document.getElementById('sPag').style.display='none';buscar()}
-function abrirChat(){document.getElementById('chat').style.display='flex'}function fecharChat(){document.getElementById('chat').style.display='none'}
-function enviar(){let i=document.getElementById('inp');if(!i.value.trim())return;let d=document.createElement('div');d.className='msg eu';d.innerText=i.value;document.getElementById('msgs').appendChild(d);i.value='';document.getElementById('msgs').scrollTop=9999}
+novaCorrida()
+document.getElementById('btnOn').classList.add('on');document.getElementById('btnOn').innerText='● ONLINE'
 </script>
 </body>
 </html>
