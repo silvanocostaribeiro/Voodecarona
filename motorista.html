@@ -3,121 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>VOO - Cadastro Motorista</title>
+<title>VOO MOTORISTA</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
-body{background:#000;color:#fff;padding:20px}
-.logo{font-size:32px;font-weight:900;text-align:center;margin:20px 0}
-.logo span{color:#00ff88}
-.card{background:#fff;color:#000;border-radius:20px;padding:22px}
-h2{font-size:22px;margin-bottom:4px}
-.sub{color:#666;font-size:13px;margin-bottom:16px}
-label{font-weight:800;font-size:13px;margin:14px 0 6px;display:block}
-input,select{width:100%;padding:14px;border-radius:10px;border:2px solid #ddd;font-size:15px}
-input:focus{border-color:#000;outline:none}
-.row{display:flex;gap:10px}
-.row>div{flex:1}
-.btn{width:100%;padding:18px;border:none;border-radius:12px;font-weight:900;font-size:16px;margin-top:20px;background:#000;color:#fff}
-.btn:disabled{background:#ccc}
-.ok{background:#d4edda;padding:10px;border-radius:8px;font-size:12px;margin-top:10px;display:none}
-.fotoBox{border:2px dashed #000;border-radius:12px;padding:20px;text-align:center;margin-top:10px}
+body{background:#000;overflow:hidden}
+#map{position:absolute;inset:0;z-index:1}
+.topo{position:absolute;top:0;left:0;right:0;z-index:1000;background:#000;color:#fff;padding:14px;display:flex;justify-content:space-between}
+.btnOn{padding:10px 18px;border-radius:24px;border:none;font-weight:900;background:#fff;color:#000}
+.btnOn.off{background:#333;color:#fff;border:1px solid #555}
+#sheet{position:absolute;left:0;right:0;bottom:0;z-index:1100;background:#fff;border-radius:24px 24px 0 0;max-height:90vh}
+.cont{padding:16px 20px 22px}
+.price{font-size:42px;font-weight:900}
+.btnUber{width:100%;padding:18px;border:none;border-radius:12px;font-weight:900;margin-top:10px}
+.btnGreen{background:#000;color:#fff}.btnRed{background:#fff;color:#c00;border:2px solid #fcc}
 </style>
 </head>
 <body>
-<div class="logo">VOO<span>.</span></div>
-<div class="card">
-<h2>Seja motorista VOO 🚗</h2>
-<p class="sub">Cadastro aprovado na hora, automático</p>
-
-<label>Nome completo</label>
-<input id="nome" placeholder="Ex: João Silva">
-
-<label>WhatsApp</label>
-<input id="zap" placeholder="(77) 99999-9999" inputmode="numeric">
-
-<div class="row">
-<div><label>CPF</label><input id="cpf" placeholder="000.000.000-00"></div>
-<div><label>Cidade</label><select id="cidade"><option>Vitória da Conquista</option><option>Barra do Choça</option><option>Outra</option></select></div>
-</div>
-
-<label>Tipo de veículo</label>
-<select id="tipo"><option>Moto</option><option>Carro</option></select>
-
-<div class="row">
-<div><label>Placa</label><input id="placa" placeholder="ABC1D23" style="text-transform:uppercase"></div>
-<div><label>Modelo</label><input id="modelo" placeholder="Ex: CG 160 / Onix"></div>
-</div>
-
-<label>Cor do veículo</label>
-<input id="cor" placeholder="Ex: Preta">
-
-<label>Foto da CNH ou RG (leitura automática)</label>
-<div class="fotoBox" onclick="document.getElementById('file').click()">
-<div id="fotoTxt">📷 CLIQUE PARA TIRAR FOTO<br><small style="color:#666">Vamos ler automaticamente</small></div>
-<input type="file" id="file" accept="image/*" capture="environment" style="display:none" onchange="lerFoto(this)">
-</div>
-<div id="okLeitura" class="ok">✅ Documento lido com sucesso! Nome confirmado.</div>
-
-<button class="btn" id="btnCad" onclick="cadastrar()">CADASTRAR E COMEÇAR A TRABALHAR →</button>
-<p style="font-size:11px;color:#666;text-align:center;margin-top:12px">Ao cadastrar você aceita os termos do VOO. Aprovação 100% automática.</p>
-</div>
-
+<div id="map"></div>
+<div class="topo"><div>VOO R$ <b id="saldo" style="color:#0f8">0,00</b></div><button class="btnOn" id="btnOn" onclick="toggleOffline()">● ONLINE</button></div>
+<div id="sheet"><div class="cont" id="cont"></div></div>
 <script>
-let docLido = false
-function lerFoto(input){
-  if(input.files && input.files[0]){
-    document.getElementById('fotoTxt').innerHTML='⏳ LENDO DOCUMENTO...<br><small>IA analisando</small>'
-    // SIMULA LEITURA AUTOMÁTICA
-    setTimeout(()=>{
-      document.getElementById('fotoTxt').innerHTML='✅ FOTO LIDA<br><small>Documento ok</small>'
-      document.getElementById('okLeitura').style.display='block'
-      docLido = true
-      // Preenche automático se quiser
-      // document.getElementById('nome').value = "Nome lido da foto"
-    },2000)
-  }
+let map=L.map('map',{zoomControl:false,attributionControl:false}).setView([-14.866,-40.839],16)
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
+let eu=L.marker([-14.866,-40.839]).addTo(map),mk1,mk2,linha,online=true,saldo=Number(localStorage.getItem('saldo')||0),dados={},timerInt=null,somInt=null,audioCtx=null,estado='oferta'
+document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',')
+
+function tocar(){if(!online)return;pararSom();try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();function bip(){if(!online||!audioCtx)return;let o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.frequency.value=900;g.gain.setValueAtTime(1,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.3);o.start();o.stop(audioCtx.currentTime+0.3)}bip();somInt=setInterval(bip,1000)}catch(e){}}
+function pararSom(){if(somInt){clearInterval(somInt);somInt=null}if(timerInt){clearInterval(timerInt);timerInt=null}try{if(audioCtx){audioCtx.close();audioCtx=null}}catch(e){}}
+
+function setPag(t){let d=document.getElementById('boxDin'),p=document.getElementById('boxPix');if(!d)return;if(t=='DIN'){d.style.display='block';p.style.display='none'}else{d.style.display='none';p.style.display='block'}}
+
+function render(){
+let c=document.getElementById('cont')
+if(estado=='oferta'){c.innerHTML=`<div style="display:flex;justify-content:space-between"><span id="sec" style="font-weight:900;border:3px solid #000;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center">15</span><span style="background:#000;color:#fff;padding:6px 10px;border-radius:20px;font-size:11px">${dados.forma} ${dados.pago?'PAGO':''} • ${dados.dist}km</span></div><div class="price">R$ ${dados.v}</div><p>BUSCAR ${dados.b1} (${dados.kmB}km) → LEVAR ${dados.b2} (${dados.kmL}km)</p><button class="btnUber btnGreen" onclick="aceitar()">ACEITAR</button><button class="btnUber btnRed" onclick="recusar()">RECUSAR</button>`;iniciaTimer()}
+else if(estado=='embarque'){c.innerHTML=`<h3>Indo buscar ${dados.b1}</h3><div style="background:#000;color:#fff;padding:18px;border-radius:12px;text-align:center;margin-top:12px;font-weight:900" onclick="chegou()">CHEGUEI NO LOCAL →</div>`}
+else if(estado=='chegou'){c.innerHTML=`<h3>Chegou em ${dados.b1}</h3><div style="background:#000;color:#fff;padding:18px;border-radius:12px;text-align:center;margin-top:12px;font-weight:900" onclick="iniciar()">INICIAR CORRIDA →</div>`}
+else if(estado=='viagem'){c.innerHTML=`<h3>Levando para ${dados.b2}</h3><div style="background:#000;color:#fff;padding:18px;border-radius:12px;text-align:center;margin-top:12px;font-weight:900" onclick="chegouDestino()">CHEGUEI NO DESTINO →</div>`}
+else if(estado=='pagamento'){
+ if(dados.pago){c.innerHTML=`<div style="text-align:center"><div style="background:#d4edda;padding:10px;border-radius:10px;font-weight:900">✅ JÁ PAGO NO PIX</div><div class="price">R$ ${dados.v}</div><button class="btnUber btnGreen" onclick="finalizar()">FINALIZAR</button></div>`}
+ else{c.innerHTML=`<div style="text-align:center"><div class="price">R$ ${dados.v}</div><p style="color:#c00;font-weight:900">PASSAGEIRO NÃO PAGOU AINDA</p><div style="display:flex;gap:8px;margin:10px 0"><button style="flex:1;padding:14px;border:2px solid #000;border-radius:10px;font-weight:900" onclick="setPag('DIN')">💵 DINHEIRO</button><button style="flex:1;padding:14px;border:2px solid #000;border-radius:10px;font-weight:900" onclick="setPag('PIX')">💠 PIX</button></div><div id="boxDin" style="display:none"><div style="background:#fff3cd;padding:10px;border-radius:10px">COBRAR R$ ${dados.v} NA MÃO</div><button class="btnUber btnGreen" onclick="finalizar()">DINHEIRO RECEBIDO</button></div><div id="boxPix" style="display:none"><div style="width:200px;height:200px;border:2px dashed #000;margin:10px auto;display:flex;align-items:center;justify-content:center;font-weight:900">QR CODE<br>R$ ${dados.v}<br>PIX VOO</div><button class="btnUber btnGreen" onclick="finalizar()">PIX RECEBIDO</button></div></div>`;setTimeout(()=>setPag('DIN'),50)}
+}
 }
 
-function cadastrar(){
-  let nome=document.getElementById('nome').value.trim()
-  let zap=document.getElementById('zap').value.trim()
-  let placa=document.getElementById('placa').value.trim()
-  let modelo=document.getElementById('modelo').value.trim()
-
-  if(!nome ||!zap ||!placa ||!modelo){
-    alert('Preenche nome, whatsapp, placa e modelo')
-    return
-  }
-  if(!docLido){
-    if(!confirm('Sem foto do documento? Pode cadastrar mesmo assim e enviar depois. Continuar?')) return
-  }
-
-  document.getElementById('btnCad').innerText='⏳ APROVANDO AUTOMATICAMENTE...'
-  document.getElementById('btnCad').disabled=true
-
-  // SALVA TUDO NO CELULAR DELE - APROVAÇÃO AUTOMÁTICA
-  let motorista={
-    nome:nome,
-    zap:zap,
-    cpf:document.getElementById('cpf').value,
-    placa:placa.toUpperCase(),
-    modelo:modelo,
-    cor:document.getElementById('cor').value,
-    tipo:document.getElementById('tipo').value,
-    cidade:document.getElementById('cidade').value,
-    aprovado:true,
-    dataCadastro:new Date().toISOString()
-  }
-  localStorage.setItem('voo_motorista',JSON.stringify(motorista))
-  localStorage.setItem('voo_aprovado','true')
-
-  // SIMULA ANÁLISE AUTOMÁTICA DE 2 SEGUNDOS
-  setTimeout(()=>{
-    alert('✅ APROVADO AUTOMATICAMENTE!\n\nBem-vindo '+nome+'!\nSua placa '+placa.toUpperCase()+' foi liberada.\n\nJá vai abrir o app pra trabalhar.')
-    // JOGA PRA PÁGINA INTERNA QUE VOCÊ MOSTROU NO ÁUDIO
-    window.location.href='motorista.html?v=cadastro-aprovado'
-  },2000)
-}
+function nova(){let b=['Centro','Candeias','Recreio','Brasil','Patagônia','Ibirapuera'];let b1=b[Math.floor(Math.random()*b.length)],b2=b[Math.floor(Math.random()*b.length)];while(b2==b1){b2=b[Math.floor(Math.random()*b.length)]}let kb=(Math.random()*1+0.4).toFixed(1),kl=(Math.random()*2+1).toFixed(1),dist=(parseFloat(kb)+parseFloat(kl)).toFixed(1),v=(3.5+parseFloat(dist)*2.2).toFixed(2);let forma=Math.random()>0.5?'PIX':'DINHEIRO',pago=forma=='PIX'?(Math.random()>0.5):false;dados={v:v.replace('.',','),vNum:v,b1:b1,b2:b2,kmB:kb,kmL:kl,dist:dist,forma:forma,pago:pago};if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha);let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng;mk1=L.marker([lat+0.004,lng+0.004]).addTo(map);mk2=L.marker([lat+0.012,lng+0.012]).addTo(map);linha=L.polyline([[lat,lng],[lat+0.004,lng+0.004],[lat+0.012,lng+0.012]],{color:'#000',weight:6}).addTo(map);map.fitBounds(linha.getBounds(),{padding:[60,60]});estado='oferta';render();tocar()}
+function iniciaTimer(){let t=15;if(timerInt)clearInterval(timerInt);timerInt=setInterval(()=>{t--;let el=document.getElementById('sec');if(el)el.innerText=t;if(t<=0){recusar()}},1000)}
+function aceitar(){pararSom();estado='embarque';render()}
+function recusar(){pararSom();nova()}
+function chegou(){estado='chegou';render()}
+function iniciar(){estado='viagem';render()}
+function chegouDestino(){estado='pagamento';render()}
+function finalizar(){saldo+=parseFloat(dados.vNum);localStorage.setItem('saldo',saldo);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');nova()}
+function toggleOffline(){if(estado!='oferta'){alert('Finalize antes');return}online=!online;let btn=document.getElementById('btnOn'),sheet=document.getElementById('sheet');if(!online){pararSom();if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha);btn.innerText='FICAR ONLINE';btn.classList.add('off');sheet.style.display='none'}else{btn.innerText='● ONLINE';btn.classList.remove('off');sheet.style.display='block';nova()}}
+nova()
 </script>
 </body>
 </html>
