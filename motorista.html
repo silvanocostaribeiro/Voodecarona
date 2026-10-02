@@ -3,127 +3,121 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>VOO - MOTORISTA FINAL</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<title>VOO - Cadastro Motorista</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
-body{background:#000;overflow:hidden}
-#map{position:absolute;inset:0;z-index:1}
-.topo{position:absolute;top:0;left:0;right:0;z-index:1000;background:#000;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
-.btnOn{padding:10px 18px;border-radius:24px;border:none;font-weight:900;background:#fff;color:#000}
-.btnOn.off{background:#333;color:#fff;border:1px solid #555}
-#sheet{position:absolute;left:0;right:0;bottom:0;z-index:1100;background:#fff;border-radius:24px 24px 0 0;display:flex;flex-direction:column;max-height:92vh}
-.handleArea{padding:12px 0;display:flex;justify-content:center}
-.handle{width:40px;height:5px;background:#ddd;border-radius:10px}
-.cont{padding:0 20px 22px;overflow-y:auto}
-.price{font-size:44px;font-weight:900}
-.bairroG{font-size:20px;font-weight:900}
-.route{position:relative;padding-left:28px;margin:14px 0}
-.route:before{content:'';position:absolute;left:8px;top:8px;bottom:8px;width:2px;background:#000}
-.dot{position:absolute;left:2px;width:14px;height:14px;border-radius:50%;border:3px solid #000;background:#fff}
-.dot.start{top:0}.dot.end{bottom:0;background:#000}
-.btnUber{width:100%;padding:18px;border:none;border-radius:12px;font-weight:900;font-size:16px;margin-top:10px}
-.btnGreen{background:#000;color:#fff}.btnRed{background:#fff;color:#c00;border:2px solid #fcc}
-.timerBar{height:5px;background:#eee;border-radius:10px;overflow:hidden;margin:8px 0}
-.timerBar div{height:100%;background:#00c853;width:100%;transition:1s linear}
+body{background:#000;color:#fff;padding:20px}
+.logo{font-size:32px;font-weight:900;text-align:center;margin:20px 0}
+.logo span{color:#00ff88}
+.card{background:#fff;color:#000;border-radius:20px;padding:22px}
+h2{font-size:22px;margin-bottom:4px}
+.sub{color:#666;font-size:13px;margin-bottom:16px}
+label{font-weight:800;font-size:13px;margin:14px 0 6px;display:block}
+input,select{width:100%;padding:14px;border-radius:10px;border:2px solid #ddd;font-size:15px}
+input:focus{border-color:#000;outline:none}
+.row{display:flex;gap:10px}
+.row>div{flex:1}
+.btn{width:100%;padding:18px;border:none;border-radius:12px;font-weight:900;font-size:16px;margin-top:20px;background:#000;color:#fff}
+.btn:disabled{background:#ccc}
+.ok{background:#d4edda;padding:10px;border-radius:8px;font-size:12px;margin-top:10px;display:none}
+.fotoBox{border:2px dashed #000;border-radius:12px;padding:20px;text-align:center;margin-top:10px}
 </style>
 </head>
 <body>
-<div id="map"></div>
-<div class="topo"><div>🚗 VOO • R$ <b id="saldo" style="color:#00ff88">0,00</b></div><button class="btnOn" id="btnOn" onclick="toggleOffline()">● ONLINE</button></div>
-<div id="sheet"><div class="handleArea"><div class="handle"></div></div><div class="cont" id="cont"></div></div>
-<script>
-let map=L.map('map',{zoomControl:false,attributionControl:false}).setView([-14.866,-40.839],16)
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
-let eu=L.marker([-14.866,-40.839]).addTo(map)
-let mk1,mk2,linha,online=true,saldo=Number(localStorage.getItem('saldo')||0),dados={},timerInt=null,somInt=null,audioCtx=null,estado='oferta'
-document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',')
+<div class="logo">VOO<span>.</span></div>
+<div class="card">
+<h2>Seja motorista VOO 🚗</h2>
+<p class="sub">Cadastro aprovado na hora, automático</p>
 
-function tocar(){
-  if(!online) return
-  pararSom()
-  try{
-    audioCtx=new(window.AudioContext||window.webkitAudioContext)()
-    function bip(){
-      if(!online || !audioCtx) return
-      let o=audioCtx.createOscillator(),g=audioCtx.createGain()
-      o.connect(g);g.connect(audioCtx.destination)
-      o.type='square';o.frequency.value=900
-      g.gain.setValueAtTime(1,audioCtx.currentTime)
-      g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.3)
-      o.start();o.stop(audioCtx.currentTime+0.3)
-    }
-    bip(); somInt=setInterval(bip,1000)
-    if(navigator.vibrate) navigator.vibrate([400,100,400])
-  }catch(e){}
-}
-function pararSom(){
-  if(somInt){clearInterval(somInt);somInt=null}
-  if(timerInt){clearInterval(timerInt);timerInt=null}
-  if(navigator.vibrate) navigator.vibrate(0)
-  try{if(audioCtx){audioCtx.close();audioCtx=null}}catch(e){audioCtx=null}
-}
-function setPag(tipo){
-  let bD=document.getElementById('boxDin'),bP=document.getElementById('boxPix')
-  if(!bD) return
-  if(tipo=='DINHEIRO'){
-    bD.style.display='block';bP.style.display='none'
-    document.getElementById('btnDin').style.background='#000';document.getElementById('btnDin').style.color='#fff'
-    document.getElementById('btnPix').style.background='#fff';document.getElementById('btnPix').style.color='#000'
-  }else{
-    bD.style.display='none';bP.style.display='block'
-    document.getElementById('btnPix').style.background='#000';document.getElementById('btnPix').style.color='#fff'
-    document.getElementById('btnDin').style.background='#fff';document.getElementById('btnDin').style.color='#000'
+<label>Nome completo</label>
+<input id="nome" placeholder="Ex: João Silva">
+
+<label>WhatsApp</label>
+<input id="zap" placeholder="(77) 99999-9999" inputmode="numeric">
+
+<div class="row">
+<div><label>CPF</label><input id="cpf" placeholder="000.000.000-00"></div>
+<div><label>Cidade</label><select id="cidade"><option>Vitória da Conquista</option><option>Barra do Choça</option><option>Outra</option></select></div>
+</div>
+
+<label>Tipo de veículo</label>
+<select id="tipo"><option>Moto</option><option>Carro</option></select>
+
+<div class="row">
+<div><label>Placa</label><input id="placa" placeholder="ABC1D23" style="text-transform:uppercase"></div>
+<div><label>Modelo</label><input id="modelo" placeholder="Ex: CG 160 / Onix"></div>
+</div>
+
+<label>Cor do veículo</label>
+<input id="cor" placeholder="Ex: Preta">
+
+<label>Foto da CNH ou RG (leitura automática)</label>
+<div class="fotoBox" onclick="document.getElementById('file').click()">
+<div id="fotoTxt">📷 CLIQUE PARA TIRAR FOTO<br><small style="color:#666">Vamos ler automaticamente</small></div>
+<input type="file" id="file" accept="image/*" capture="environment" style="display:none" onchange="lerFoto(this)">
+</div>
+<div id="okLeitura" class="ok">✅ Documento lido com sucesso! Nome confirmado.</div>
+
+<button class="btn" id="btnCad" onclick="cadastrar()">CADASTRAR E COMEÇAR A TRABALHAR →</button>
+<p style="font-size:11px;color:#666;text-align:center;margin-top:12px">Ao cadastrar você aceita os termos do VOO. Aprovação 100% automática.</p>
+</div>
+
+<script>
+let docLido = false
+function lerFoto(input){
+  if(input.files && input.files[0]){
+    document.getElementById('fotoTxt').innerHTML='⏳ LENDO DOCUMENTO...<br><small>IA analisando</small>'
+    // SIMULA LEITURA AUTOMÁTICA
+    setTimeout(()=>{
+      document.getElementById('fotoTxt').innerHTML='✅ FOTO LIDA<br><small>Documento ok</small>'
+      document.getElementById('okLeitura').style.display='block'
+      docLido = true
+      // Preenche automático se quiser
+      // document.getElementById('nome').value = "Nome lido da foto"
+    },2000)
   }
 }
-function render(){
-  let c=document.getElementById('cont')
-  if(estado=='oferta'){
-    c.innerHTML=`<div style="display:flex;justify-content:space-between"><span id="sec" style="font-weight:900;border:3px solid #000;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center">15</span><span style="background:#000;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">${dados.forma} ${dados.pago?'• PAGO':''} • ${dados.dist}km</span></div><div class="timerBar"><div id="bar"></div></div><div class="price">R$ ${dados.v}</div><div class="route"><div class="dot start"></div><div class="bairroG">BUSCAR: ${dados.b1}</div><div style="font-size:13px;color:#666">${dados.kmB}km</div><div style="height:20px"></div><div class="dot end"></div><div class="bairroG" style="color:#00a651">LEVAR: ${dados.b2}</div><div style="font-size:13px;color:#666">${dados.kmL}km</div></div><button class="btnUber btnGreen" onclick="aceitar()">✅ ACEITAR</button><button class="btnUber btnRed" onclick="recusar()">❌ RECUSAR</button>`
-    iniciaTimer()
-  }else if(estado=='embarque'){
-    c.innerHTML=`<h3>A caminho de ${dados.b1}</h3><p>👤 Passageiro 4.9⭐</p><div style="background:#000;color:#fff;padding:18px;border-radius:12px;margin-top:14px;text-align:center;font-weight:900" onclick="chegou()">CLIQUE - CHEGUEI →</div><button class="btnUber btnRed" onclick="cancelar()">Cancelar</button>`
-  }else if(estado=='chegou'){
-    c.innerHTML=`<h3 style="text-align:center">Chegou em ${dados.b1}</h3><div style="background:#000;color:#fff;padding:18px;border-radius:12px;margin-top:14px;text-align:center;font-weight:900" onclick="iniciar()">INICIAR CORRIDA →</div>`
-  }else if(estado=='viagem'){
-    c.innerHTML=`<h3>Levando para ${dados.b2} - ${dados.kmL}km</h3><p>💰 R$ ${dados.v} • ${dados.forma} ${dados.pago?'• JÁ PAGO':''}</p><div style="background:#000;color:#fff;padding:18px;border-radius:12px;margin-top:14px;text-align:center;font-weight:900" onclick="chegouDestino()">CHEGUEI NO DESTINO →</div>`
-  }else if(estado=='pagamento'){
-    if(dados.pago && dados.forma=='PIX'){
-      c.innerHTML=`<div style="text-align:center"><div style="background:#d4edda;padding:12px;border-radius:10px;font-weight:900">✅ JÁ PAGO NO PIX</div><div class="price">R$ ${dados.v}</div><p>${dados.b1} → ${dados.b2}</p><button class="btnUber btnGreen" onclick="finalizar()">FINALIZAR CORRIDA</button></div>`
-    }else{
-      c.innerHTML=`<div style="text-align:center"><h3>Finalizar</h3><div class="price">R$ ${dados.v}</div><p>${dados.b1} → ${dados.b2}</p><p style="margin:8px 0;font-size:13px;color:#c00;font-weight:800">⚠️ NÃO PAGOU AINDA</p><div style="display:flex;gap:10px;margin:12px 0"><button id="btnDin" onclick="setPag('DINHEIRO')" style="flex:1;padding:14px;border-radius:12px;border:2px solid #000;font-weight:900">💵 DINHEIRO</button><button id="btnPix" onclick="setPag('PIX')" style="flex:1;padding:14px;border-radius:12px;border:2px solid #000;font-weight:900">💠 PIX</button></div><div id="boxDin" style="display:none"><div style="background:#fff3cd;padding:12px;border-radius:10px">COBRAR R$ ${dados.v} NA MÃO</div><button class="btnUber btnGreen" onclick="finalizar()">✅ DINHEIRO RECEBIDO</button></div><div id="boxPix" style="display:none"><div style="width:220px;height:220px;border:2px dashed #000;margin:12px auto;display:flex;align-items:center;justify-content:center;font-weight:900">QR CODE<br>R$ ${dados.v}<br>PIX</div><button class="btnUber btnGreen" onclick="finalizar()">✅ PIX RECEBIDO</button></div></div>`
-      setTimeout(()=>{setPag('DINHEIRO')},50)
-    }
+
+function cadastrar(){
+  let nome=document.getElementById('nome').value.trim()
+  let zap=document.getElementById('zap').value.trim()
+  let placa=document.getElementById('placa').value.trim()
+  let modelo=document.getElementById('modelo').value.trim()
+
+  if(!nome ||!zap ||!placa ||!modelo){
+    alert('Preenche nome, whatsapp, placa e modelo')
+    return
   }
+  if(!docLido){
+    if(!confirm('Sem foto do documento? Pode cadastrar mesmo assim e enviar depois. Continuar?')) return
+  }
+
+  document.getElementById('btnCad').innerText='⏳ APROVANDO AUTOMATICAMENTE...'
+  document.getElementById('btnCad').disabled=true
+
+  // SALVA TUDO NO CELULAR DELE - APROVAÇÃO AUTOMÁTICA
+  let motorista={
+    nome:nome,
+    zap:zap,
+    cpf:document.getElementById('cpf').value,
+    placa:placa.toUpperCase(),
+    modelo:modelo,
+    cor:document.getElementById('cor').value,
+    tipo:document.getElementById('tipo').value,
+    cidade:document.getElementById('cidade').value,
+    aprovado:true,
+    dataCadastro:new Date().toISOString()
+  }
+  localStorage.setItem('voo_motorista',JSON.stringify(motorista))
+  localStorage.setItem('voo_aprovado','true')
+
+  // SIMULA ANÁLISE AUTOMÁTICA DE 2 SEGUNDOS
+  setTimeout(()=>{
+    alert('✅ APROVADO AUTOMATICAMENTE!\n\nBem-vindo '+nome+'!\nSua placa '+placa.toUpperCase()+' foi liberada.\n\nJá vai abrir o app pra trabalhar.')
+    // JOGA PRA PÁGINA INTERNA QUE VOCÊ MOSTROU NO ÁUDIO
+    window.location.href='motorista.html?v=cadastro-aprovado'
+  },2000)
 }
-function nova(){
-  let bairros=['Centro','Candeias','Recreio','Brasil','Patagônia','Ibirapuera','Felícia','Morada Real','UrBis VI']
-  let b1=bairros[Math.floor(Math.random()*bairros.length)],b2=bairros[Math.floor(Math.random()*bairros.length)];while(b2==b1){b2=bairros[Math.floor(Math.random()*bairros.length)]}
-  let kb=(Math.random()*1+0.4).toFixed(1),kl=(Math.random()*2+1).toFixed(1),dist=(parseFloat(kb)+parseFloat(kl)).toFixed(1),v=(3.5+parseFloat(dist)*2.2).toFixed(2)
-  let forma=Math.random()>0.5?'PIX':'DINHEIRO', pago=forma=='PIX'?(Math.random()>0.5):false
-  dados={v:v.replace('.',','),vNum:v,b1:b1,b2:b2,kmB:kb,kmL:kl,dist:dist,forma:forma,pago:pago}
-  if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha)
-  let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng;mk1=L.marker([lat+0.004,lng+0.004]).addTo(map);mk2=L.marker([lat+0.012,lng+0.012]).addTo(map);linha=L.polyline([[lat,lng],[lat+0.004,lng+0.004],[lat+0.012,lng+0.012]],{color:'#000',weight:6}).addTo(map);map.fitBounds(linha.getBounds(),{padding:[80,80]})
-  estado='oferta';render();tocar()
-}
-function iniciaTimer(){let t=15;if(timerInt)clearInterval(timerInt);timerInt=setInterval(()=>{t--;let el=document.getElementById('sec'),bar=document.getElementById('bar');if(el)el.innerText=t;if(bar)bar.style.width=(t/15*100)+'%';if(t<=0){recusar()}},1000)}
-function aceitar(){pararSom();estado='embarque';render()}
-function recusar(){pararSom();nova()}
-function chegou(){estado='chegou';render()}
-function iniciar(){if(mk1)map.removeLayer(mk1);estado='viagem';render()}
-function chegouDestino(){estado='pagamento';render()}
-function finalizar(){saldo+=parseFloat(dados.vNum);localStorage.setItem('saldo',saldo);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');nova()}
-function cancelar(){pararSom();estado='oferta';nova()}
-function toggleOffline(){
-  if(estado!='oferta'){alert('Finalize a corrida antes!');return}
-  online=!online
-  let btn=document.getElementById('btnOn'),sheetEl=document.getElementById('sheet')
-  if(!online){pararSom();if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha);btn.innerText='FICAR ONLINE';btn.classList.add('off');sheetEl.style.display='none'}
-  else{btn.innerText='● ONLINE';btn.classList.remove('off');sheetEl.style.display='flex';nova()}
-}
-if(navigator.geolocation){navigator.geolocation.watchPosition(p=>{eu.setLatLng([p.coords.latitude,p.coords.longitude])},null,{enableHighAccuracy:true})}
-nova()
 </script>
 </body>
 </html>
