@@ -1,42 +1,122 @@
-<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VOO Motorista</title>
+<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><title>VOO Motorista - Uber Style</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}body{background:#f0f0f0}.topo{background:#000;color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000}.sw{width:62px;height:34px;background:#333;border-radius:20px;position:relative}.sw.on{background:#00c853}.bola{width:28px;height:28px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:.3s}.sw.on .bola{left:31px}#map{height:40vh;width:100%}.card{background:#fff;margin:10px;border-radius:20px;padding:16px;box-shadow:0 4px 10px rgba(0,0,0,.15)}.btn{width:100%;padding:16px;border:none;border-radius:14px;font-weight:bold;font-size:17px;margin-top:8px}.btnV{background:#00c853;color:#fff}.btnL{background:#ff8c00;color:#fff}.btnP{background:#000;color:#fff}.btnPix{background:#32bcad;color:#fff}.et{display:none}.et.on{display:block}.navTop{background:#000;color:#fff;padding:10px;display:none;justify-content:space-between;position:sticky;top:62px;z-index:900}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;color:#00ff88;padding:12px 20px;border-radius:30px;display:none;z-index:9999;font-weight:bold}#qrBox{display:none;background:#f2f2f2;border:2px dashed #000;border-radius:16px;padding:12px;text-align:center;margin-top:10px}</style>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,Arial}
+body{background:#000;overflow:hidden}
+#map{height:100vh;width:100%;position:absolute;top:0;left:0;z-index:1}
+
+/* TOPO UBER */
+.topo{position:absolute;top:0;left:0;right:0;z-index:1000;background:#000;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.topoLeft{display:flex;align-items:center;gap:10px}
+.avatar{width:38px;height:38px;background:#fff;color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold}
+.onlineBtn{background:#333;color:#fff;border:none;padding:8px 16px;border-radius:20px;font-weight:bold}
+.onlineBtn.on{background:#00c853;color:#000}
+
+/* BOTTOM SHEET ESTILO UBER */
+.sheet{position:absolute;bottom:0;left:0;right:0;z-index:1000;background:#fff;border-radius:24px 24px 0 0;padding:0;max-height:85vh;overflow-y:auto;transition:.3s;box-shadow:0 -10px 30px rgba(0,0,0,.4)}
+.handle{width:40px;height:5px;background:#ddd;border-radius:10px;margin:10px auto}
+.sheetCont{padding:16px 20px 24px}
+.badge{background:#000;color:#00ff88;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:bold}
+.preco{font-size:32px;font-weight:900;letter-spacing:-1px}
+.linha{height:1px;background:#eee;margin:12px 0}
+.rota{display:flex;gap:12px;margin:12px 0}
+.rota .bol{width:12px;display:flex;flex-direction:column;align-items:center}
+.rota .bol div{width:10px;height:10px;border-radius:50%}
+.dot1{background:#000}.dot2{background:#00c853}
+.lineV{width:2px;height:24px;background:#ccc;margin:2px 0}
+.btnUber{width:100%;padding:18px;border:none;border-radius:12px;font-weight:800;font-size:16px;margin-top:10px;cursor:pointer}
+.btnBlack{background:#000;color:#fff}.btnGreen{background:#00c853;color:#000}.btnGray{background:#f0f0f0;color:#000}
+.pagTag{padding:6px 10px;border-radius:8px;background:#f5f5f5;font-weight:bold;font-size:13px;display:inline-block}
+.et{display:none}.et.on{display:block}
+.navUber{position:absolute;top:60px;left:10px;right:10px;z-index:900;background:#000;color:#fff;border-radius:16px;padding:12px 16px;display:none;justify-content:space-between;align-items:center}
+.timer{width:60px;height:60px;border:4px solid #eee;border-top-color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
 </head><body>
-<div class="topo"><div><b>🚗 VOO</b> • R$ <span id="saldo">0,00</span></div><div style="text-align:center"><div class="sw" id="sw" onclick="toggle()"><div class="bola"></div></div><br><small id="txt">OFFLINE</small></div></div>
-<div class="navTop" id="navTop"><div><small>GPS DENTRO DO APP</small><br><b id="navInst" style="color:#00ff88">Siga</b></div><div><b id="navDist">0 km</b></div></div>
-<div id="map"></div><div class="toast" id="toast"></div>
 
-<div class="card et on" id="off"><center><b>🔴 OFFLINE</b><br>Fique ONLINE</center></div>
+<div id="map"></div>
 
-<div class="card et" id="on" style="border:3px solid #00c853"><b>🔔 NOVA CORRIDA</b> <span id="kmTop">0</span><br><br>📍 BUSCAR: <b id="kmB">0</b> | 🏁 LEVAR: <b id="kmL">0</b><br>💳 <b id="pagForma">DINHEIRO</b> <small id="pagStatus" style="color:red"></small><h1 style="text-align:center" id="valor">R$ 0</h1><button class="btn btnV" onclick="aceitar()">✅ ACEITAR</button></div>
-
-<div class="card et" id="run" style="text-align:center;border:3px solid #000"><h3>🚗 EM CORRIDA - GPS DENTRO</h3><p style="background:#000;color:#fff;padding:8px;border-radius:10px;margin:8px 0">Maria • <span id="runValor">R$ 0</span> • <span id="runPag">DINHEIRO</span></p><button class="btn btnL" onclick="msg('Estou a caminho!')">📨 ESTOU A CAMINHO</button><button class="btn btnV" onclick="msg('Cheguei no local!')">📍 CHEGUEI NO LOCAL</button><button class="btn btnP" onclick="embarcou()">🏁 EMBARCOU</button><button class="btn" style="background:#666;color:#fff" onclick="mostrarPagamento()">💰 FINALIZAR E RECEBER</button></div>
-
-<!-- TELA PAGAMENTO COM QR CODE -->
-<div class="card et" id="pag" style="text-align:center;border:3px solid #32bcad"><h2>💰 RECEBER</h2><h1 id="pagValorFinal">R$ 0</h1><p id="infoPag" style="font-weight:bold;color:red"></p>
-
-<div id="boxNaoPago">
-<button class="btn btnV" onclick="recebeu('DINHEIRO')">💵 RECEBI EM DINHEIRO</button>
-<button class="btn btnPix" onclick="gerarQR()">📱 GERAR QR CODE PIX NA HORA</button>
-<div id="qrBox"><b>QR CODE PIX - Valor da corrida</b><br><br><img id="imgQR" src="" style="width:200px;border:8px solid #fff;border-radius:12px"><br><br>Chave: <b style="background:#000;color:#00ff88;padding:5px 10px;border-radius:8px">77988054875</b><br><small>Silvano - Banco</small><br><br><button class="btn btnV" onclick="recebeu('PIX')">✅ CONFIRMAR QUE RECEBI NO PIX</button></div>
+<!-- TOPO -->
+<div class="topo">
+<div class="topoLeft"><div class="avatar">S</div><div><div style="font-weight:800">Silvano</div><small style="color:#00ff88">● R$ <span id="saldo">0,00</span> hoje</small></div></div>
+<button class="onlineBtn" id="btnOn" onclick="toggle()">FICAR ONLINE</button>
 </div>
 
-<div id="boxPago" style="display:none"><p style="background:#d4edda;color:#155724;padding:12px;border-radius:10px"><b>✅ JÁ PAGO NO PIX</b></p><button class="btn btnP" onclick="recebeu('PAGO')">✔️ CONCLUIR</button></div>
+<div class="navUber" id="navUber"><div><small style="color:#999">GPS DENTRO DO APP • UBER STYLE</small><br><b id="navTxt" style="font-size:18px">Buscando passageiro...</b></div><div id="navDist" style="font-size:20px;font-weight:900">0,8 km</div></div>
 
+<!-- SHEET OFFLINE -->
+<div class="sheet" id="sheetOff"><div class="handle"></div><div class="sheetCont" style="text-align:center"><h2 style="font-size:26px">Você está offline</h2><p style="color:#666;margin:10px 0">Fique online para receber corridas perto de você em Conquista</p><button class="btnUber btnBlack" onclick="toggle()">📍 FICAR ONLINE AGORA</button><div style="margin-top:16px;display:flex;gap:10px"><div style="flex:1;background:#f7f7f7;padding:12px;border-radius:12px"><b>R$ 0,00</b><br><small>Ganhos hoje</small></div><div style="flex:1;background:#f7f7f7;padding:12px;border-radius:12px"><b>0</b><br><small>Corridas</small></div></div></div></div>
+
+<!-- SHEET NOVA CORRIDA - IGUAL UBER -->
+<div class="sheet et" id="sheetOn"><div class="handle"></div><div class="sheetCont">
+<div style="display:flex;justify-content:space-between;align-items:center"><span class="badge">NOVA CORRIDA • <span id="kmTop">0</span></span><div class="timer" id="timer">30</div></div>
+<div style="display:flex;justify-content:space-between;align-items:end;margin-top:10px"><div><div class="preco" id="valor">R$ 12,40</div><small style="color:#666">Bandeirada + km • <span id="formaTop">DINHEIRO</span> <span id="statusTop" style="color:red">(NÃO PAGO)</span></small></div><div style="text-align:right"><b id="tempo">5 min</b><br><small>chegada</small></div></div>
+<div class="linha"></div>
+<div class="rota"><div class="bol"><div class="dot1"></div><div class="lineV"></div><div class="dot2"></div></div><div><div><small style="color:#666">BUSCAR • <span id="kmB">0,8 km</span></small><br><b>Rua do passageiro, 123 - Centro</b></div><div style="margin-top:18px"><small style="color:#666">LEVAR • <span id="kmL">2,1 km</span></small><br><b>Av. Juracy Magalhães - Conquista</b></div></div></div>
+<div class="linha"></div>
+<div style="display:flex;gap:10px"><button class="btnUber btnGray" style="flex:1" onclick="recusar()">✕ Recusar</button><button class="btnUber btnBlack" style="flex:2" onclick="aceitar()">Aceitar corrida</button></div>
+</div></div>
+
+<!-- SHEET EM CORRIDA -->
+<div class="sheet et" id="sheetRun"><div class="handle"></div><div class="sheetCont" style="text-align:center">
+<div style="display:flex;justify-content:space-between"><span class="badge">EM CORRIDA</span><span class="pagTag" id="runPag">DINHEIRO NÃO PAGO</span></div>
+<h2 style="margin:12px 0">Maria • ⭐ 4.9</h2>
+<p style="background:#000;color:#fff;display:inline-block;padding:6px 12px;border-radius:20px"><span id="runValor">R$ 12,40</span> • <span id="runDist">2,1 km</span></p>
+<div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<button class="btnUber btnGray" onclick="msg('Estou a caminho!')">📨 A caminho</button>
+<button class="btnUber btnGray" onclick="msg('Cheguei!')">📍 Cheguei</button>
 </div>
+<button class="btnUber btnBlack" onclick="embarcou()">👤 Passageiro embarcou</button>
+<button class="btnUber btnGreen" onclick="mostrarPagamento()">💰 Finalizar e receber</button>
+</div></div>
+
+<!-- SHEET PAGAMENTO UBER STYLE -->
+<div class="sheet et" id="sheetPag"><div class="handle"></div><div class="sheetCont" style="text-align:center">
+<h2>Receber pagamento</h2><div class="preco" id="pagValor">R$ 12,40</div><p id="infoPag" style="font-weight:bold;color:red">NÃO PAGO - DINHEIRO</p>
+<div id="boxDinheiro">
+<button class="btnUber btnBlack" onclick="recebeu('DINHEIRO')">💵 Recebi em dinheiro</button>
+<button class="btnUber btnGray" onclick="gerarQR()">📱 Gerar QR Code PIX na hora</button>
+<div id="qrBox" style="display:none;margin-top:12px;background:#f7f7f7;border-radius:16px;padding:14px;border:2px dashed #000"><img id="imgQR" style="width:200px;border-radius:12px"><br><br><b>Chave PIX: 77 98805-4875</b><br><br><button class="btnUber btnGreen" onclick="recebeu('PIX')">✅ Confirmar PIX recebido</button></div>
+</div>
+<div id="boxPago" style="display:none"><div style="background:#d4edda;padding:14px;border-radius:12px;color:#155724;font-weight:bold">✅ JÁ PAGO NO PIX PELO APP</div><button class="btnUber btnBlack" onclick="recebeu('PAGO')">Concluir corrida</button></div>
+</div></div>
 
 <script>
-let map=L.map('map',{zoomControl:false}).setView([-14.866,-40.839],15)
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
+let map=L.map('map',{zoomControl:false,attributionControl:false}).setView([-14.866,-40.839],16)
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map)
 let eu=L.marker([-14.866,-40.839]).addTo(map)
-let mk1,mk2,linha,online=false,saldo=0,dados={},paxLat=0,paxLng=0,dLat=0,dLng=0,navegando=false
-if(navigator.geolocation){navigator.geolocation.watchPosition(p=>{eu.setLatLng([p.coords.latitude,p.coords.longitude]);if(navegando)map.setView([p.coords.latitude,p.coords.longitude],18)},null,{enableHighAccuracy:true})}
-function toggle(){online=!online;let sw=document.getElementById('sw');if(online){sw.classList.add('on');document.getElementById('txt').innerText='ONLINE';buscar()}else{sw.classList.remove('on');document.getElementById('txt').innerText='OFFLINE';document.getElementById('on').classList.remove('on');document.getElementById('run').classList.remove('on');document.getElementById('pag').classList.remove('on');document.getElementById('off').classList.add('on');document.getElementById('navTop').style.display='none';navegando=false}}
-function buscar(){setTimeout(()=>{let b=(Math.random()*1+0.3).toFixed(1),l=(Math.random()*3+1).toFixed(1),t=(parseFloat(b)+parseFloat(l)).toFixed(1),v=(2.5+parseFloat(t)*1.8).toFixed(2);let forma=Math.random()>0.5?'DINHEIRO':'PIX';let pago=forma==='PIX';dados={v,forma,pago};document.getElementById('kmB').innerText=b+' km';document.getElementById('kmL').innerText=l+' km';document.getElementById('kmTop').innerText=t+' km';document.getElementById('valor').innerText='R$ '+v.replace('.',',');document.getElementById('pagForma').innerText=forma;document.getElementById('pagStatus').innerText=pago?'(PAGO)':'(NÃO PAGO)';let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng;paxLat=lat+(Math.random()*0.01-0.005);paxLng=lng+(Math.random()*0.01-0.005);dLat=paxLat+(Math.random()*0.02-0.01);dLng=paxLng+(Math.random()*0.02-0.01);if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha);mk1=L.marker([paxLat,paxLng]).addTo(map);mk2=L.marker([dLat,dLng]).addTo(map);linha=L.polyline([[lat,lng],[paxLat,paxLng],[dLat,dLng]],{color:'#0066ff',weight:7}).addTo(map);map.fitBounds(linha.getBounds(),{padding:[40,40]});document.getElementById('off').classList.remove('on');document.getElementById('on').classList.add('on')},1000)}
-function aceitar(){document.getElementById('on').classList.remove('on');document.getElementById('run').classList.add('on');document.getElementById('navTop').style.display='flex';document.getElementById('runValor').innerText=document.getElementById('valor').innerText;document.getElementById('runPag').innerText=dados.forma+(dados.pago?' PAGO':' NÃO PAGO');navegando=true;map.setView(eu.getLatLng(),18)}
-function msg(t){let x=document.getElementById('toast');x.innerText='✅ '+t;x.style.display='block';setTimeout(()=>x.style.display='none',3000)}
-function embarcou(){linha.setLatLngs([[eu.getLatLng().lat,eu.getLatLng().lng],[dLat,dLng]])}
-function mostrarPagamento(){document.getElementById('run').classList.remove('on');document.getElementById('pag').classList.add('on');document.getElementById('navTop').style.display='none';document.getElementById('pagValorFinal').innerText=document.getElementById('valor').innerText;document.getElementById('infoPag').innerText=dados.pago?'✅ JÁ PAGO NO PIX':'⚠️ NÃO PAGO - Pediu em '+dados.forma;document.getElementById('qrBox').style.display='none';if(dados.pago){document.getElementById('boxPago').style.display='block';document.getElementById('boxNaoPago').style.display='none'}else{document.getElementById('boxPago').style.display='none';document.getElementById('boxNaoPago').style.display='block'}}
-function gerarQR(){let valor=dados.v;let chave='77988054875';let payload='PIX '+chave+' VALOR R$'+valor;let url='https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(payload+' | VOO APP');document.getElementById('imgQR').src=url;document.getElementById('qrBox').style.display='block';msg('QR CODE GERADO - R$ '+valor)}
-function recebeu(t){saldo+=parseFloat(dados.v);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');msg('Recebido em '+t);document.getElementById('pag').classList.remove('on');document.getElementById('off').classList.add('on');navegando=false;if(linha)map.removeLayer(linha);buscar()}
+let mk1,mk2,linha,online=false,saldo=0,dados={},timerInt
+if(navigator.geolocation){navigator.geolocation.watchPosition(p=>{eu.setLatLng([p.coords.latitude,p.coords.longitude]);if(online)map.setView([p.coords.latitude,p.coords.longitude])},null,{enableHighAccuracy:true})}
+
+function toggle(){
+ online=!online
+ document.getElementById('btnOn').classList.toggle('on',online)
+ document.getElementById('btnOn').innerText=online?'● ONLINE':'FICAR ONLINE'
+ if(online){document.getElementById('sheetOff').classList.remove('on');buscar();document.getElementById('navUber').style.display='flex'}
+ else{resetAll()}
+}
+function resetAll(){clearInterval(timerInt);document.getElementById('sheetOff').style.display='block';document.getElementById('sheetOn').classList.remove('on');document.getElementById('sheetRun').classList.remove('on');document.getElementById('sheetPag').classList.remove('on');document.getElementById('navUber').style.display='none';if(linha)map.removeLayer(linha)}
+
+function buscar(){
+ setTimeout(()=>{
+  let b=(Math.random()*1+0.3).toFixed(1),l=(Math.random()*3+1).toFixed(1),t=(parseFloat(b)+parseFloat(l)).toFixed(1),v=(2.5+parseFloat(t)*1.8).toFixed(2)
+  let forma=Math.random()>0.4?'DINHEIRO':'PIX',pago=forma==='PIX'
+  dados={v,forma,pago}
+  document.getElementById('kmB').innerText=b+' km';document.getElementById('kmL').innerText=l+' km';document.getElementById('kmTop').innerText=t+' km';document.getElementById('valor').innerText='R$ '+v.replace('.',',');document.getElementById('formaTop').innerText=forma;document.getElementById('statusTop').innerText=pago?'(PAGO)':'(NÃO PAGO)'
+  let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng
+  let pLat=lat+(Math.random()*0.01-0.005),pLng=lng+(Math.random()*0.01-0.005),dLat=pLat+(Math.random()*0.02-0.01),dLng=pLng+(Math.random()*0.02-0.01)
+  if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha)
+  mk1=L.marker([pLat,pLng]).addTo(map);mk2=L.marker([dLat,dLng]).addTo(map);linha=L.polyline([[lat,lng],[pLat,pLng],[dLat,dLng]],{color:'#00ff88',weight:6}).addTo(map)
+  map.fitBounds(linha.getBounds(),{padding:[100,100]})
+  document.getElementById('sheetOn').classList.add('on')
+  let sec=30;clearInterval(timerInt);timerInt=setInterval(()=>{sec--;document.getElementById('timer').innerText=sec;if(sec<=0){clearInterval(timerInt);recusar()}},1000)
+ },1200)
+}
+function recusar(){document.getElementById('sheetOn').classList.remove('on');buscar()}
+function aceitar(){clearInterval(timerInt);document.getElementById('sheetOn').classList.remove('on');document.getElementById('sheetRun').classList.add('on');document.getElementById('runValor').innerText=document.getElementById('valor').innerText;document.getElementById('runPag').innerText=dados.forma+(dados.pago?' PAGO':' NÃO PAGO');document.getElementById('navTxt').innerText='A caminho do passageiro';map.setView(eu.getLatLng(),17)}
+function msg(t){alert('✅ '+t)}
+function embarcou(){document.getElementById('navTxt').innerText='Levando para destino';}
+function mostrarPagamento(){document.getElementById('sheetRun').classList.remove('on');document.getElementById('sheetPag').classList.add('on');document.getElementById('pagValor').innerText=document.getElementById('valor').innerText;document.getElementById('infoPag').innerText=dados.pago?'✅ JÁ PAGO NO PIX':'⚠️ NÃO PAGO - '+dados.forma;document.getElementById('qrBox').style.display='none';document.getElementById('boxPago').style.display=dados.pago?'block':'none';document.getElementById('boxDinheiro').style.display=dados.pago?'none':'block'}
+function gerarQR(){let url='https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=PIX 77988054875 VALOR '+dados.v;document.getElementById('imgQR').src=url;document.getElementById('qrBox').style.display='block'}
+function recebeu(t){saldo+=parseFloat(dados.v);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');document.getElementById('sheetPag').classList.remove('on');buscar()}
 </script></body></html>
