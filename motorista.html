@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>VOO - UBER FINAL</title>
+<title>VOO - CORRIGIDO OFFLINE + PAGAMENTO</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -13,7 +13,7 @@ body{background:#000;overflow:hidden}
 .topo{position:absolute;top:0;left:0;right:0;z-index:1000;background:#000;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
 .btnOn{padding:10px 18px;border-radius:24px;border:none;font-weight:900;background:#fff;color:#000}
 .btnOn.off{background:#222;color:#fff;border:1px solid #444}
-#sheet{position:absolute;left:0;right:0;bottom:0;z-index:1100;background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.5);display:flex;flex-direction:column;max-height:92vh}
+#sheet{position:absolute;left:0;right:0;bottom:0;z-index:1100;background:#fff;border-radius:24px 24px 0 0;display:flex;flex-direction:column;max-height:92vh}
 .handleArea{padding:12px 0;display:flex;justify-content:center}
 .handle{width:40px;height:5px;background:#ddd;border-radius:10px}
 .cont{padding:0 20px 22px;overflow-y:auto}
@@ -25,16 +25,13 @@ body{background:#000;overflow:hidden}
 .dot.start{top:0}.dot.end{bottom:0;background:#000}
 .btnUber{width:100%;padding:18px;border:none;border-radius:12px;font-weight:900;font-size:16px;margin-top:10px}
 .btnGreen{background:#000;color:#fff}.btnRed{background:#fff;color:#c00;border:2px solid #fcc}
-.sliderUber{position:relative;background:#000;border-radius:30px;height:56px;display:flex;align-items:center;padding:4px;margin-top:16px;cursor:pointer}
-.sliderTrack{color:#fff;font-weight:800;text-align:center;flex:1}
-.sliderThumb{position:absolute;left:4px;width:48px;height:48px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center}
 .timerBar{height:5px;background:#eee;border-radius:10px;overflow:hidden;margin:8px 0}
 .timerBar div{height:100%;background:#00c853;width:100%;transition:1s linear}
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="topo"><div>🚗 VOO • R$ <b id="saldo" style="color:#00ff88">0,00</b></div><button class="btnOn" id="btnOn" onclick="toggle()">● ONLINE</button></div>
+<div class="topo"><div>🚗 VOO • R$ <b id="saldo" style="color:#00ff88">0,00</b></div><button class="btnOn" id="btnOn" onclick="toggleOffline()">● ONLINE</button></div>
 <div id="sheet"><div class="handleArea"><div class="handle"></div></div><div class="cont" id="cont"></div></div>
 <script>
 let map=L.map('map',{zoomControl:false,attributionControl:false}).setView([-14.866,-40.839],16)
@@ -43,38 +40,33 @@ let eu=L.marker([-14.866,-40.839]).addTo(map)
 let mk1,mk2,linha,online=true,saldo=Number(localStorage.getItem('saldo')||0),dados={},timerInt=null,somInt=null,audioCtx=null,estado='oferta'
 document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',')
 
+// SOM - CORRIGIDO PRA PARAR 100%
 function tocar(){
-  if(!online) return;
+  if(!online) return
+  pararSom() // mata qualquer som antigo antes
   try{
-    if(somInt)clearInterval(somInt);
-    if(audioCtx)audioCtx.close();
-    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)()
     function bip(){
-      if(!online) return;
-      let o=audioCtx.createOscillator(),g=audioCtx.createGain();
-      o.connect(g);g.connect(audioCtx.destination);
-      o.type='square';o.frequency.value=950;g.gain.setValueAtTime(1,audioCtx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.4);
-      o.start();o.stop(audioCtx.currentTime+0.4);
-      setTimeout(()=>{
-        if(!online) return;
-        let o2=audioCtx.createOscillator(),g2=audioCtx.createGain();
-        o2.connect(g2);g2.connect(audioCtx.destination);
-        o2.type='square';o2.frequency.value=1200;g2.gain.setValueAtTime(1,audioCtx.currentTime);
-        g2.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.4);
-        o2.start();o2.stop(audioCtx.currentTime+0.4);
-      },200)
+      if(!online || !audioCtx) return
+      let o=audioCtx.createOscillator(),g=audioCtx.createGain()
+      o.connect(g);g.connect(audioCtx.destination)
+      o.type='square';o.frequency.value=900
+      g.gain.setValueAtTime(1,audioCtx.currentTime)
+      g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.3)
+      o.start();o.stop(audioCtx.currentTime+0.3)
     }
-    bip(); somInt=setInterval(bip,1300);
-    if(navigator.vibrate) navigator.vibrate([300,100,300,100,500])
+    bip()
+    somInt=setInterval(bip,1000)
+    if(navigator.vibrate) navigator.vibrate([400,100,400])
   }catch(e){}
 }
 function pararSom(){
   if(somInt){clearInterval(somInt);somInt=null}
   if(timerInt){clearInterval(timerInt);timerInt=null}
   if(navigator.vibrate) navigator.vibrate(0)
-  try{if(audioCtx){audioCtx.close();audioCtx=null}}catch(e){}
+  try{if(audioCtx){audioCtx.close();audioCtx=null}}catch(e){audioCtx=null}
 }
+
 function setPag(tipo){
   let bD=document.getElementById('boxDin'),bP=document.getElementById('boxPix')
   if(!bD) return
@@ -88,46 +80,57 @@ function setPag(tipo){
     document.getElementById('btnDin').style.background='#fff';document.getElementById('btnDin').style.color='#000'
   }
 }
+
 function render(){
   let c=document.getElementById('cont')
   if(estado=='oferta'){
-    c.innerHTML=`<div style="display:flex;justify-content:space-between"><span id="sec" style="font-weight:900;border:3px solid #000;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center">15</span><span style="background:#000;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">${dados.forma} • ${dados.dist}km</span></div><div class="timerBar"><div id="bar"></div></div><div class="price">R$ ${dados.v}</div><div class="route"><div class="dot start"></div><div class="bairroG">BUSCAR: ${dados.b1}</div><div style="font-size:13px;color:#666">${dados.kmB}km • ${dados.ruaB}</div><div style="height:20px"></div><div class="dot end"></div><div class="bairroG" style="color:#00a651">LEVAR: ${dados.b2}</div><div style="font-size:13px;color:#666">${dados.kmL}km • ${dados.ruaD}</div></div><button class="btnUber btnGreen" onclick="aceitar()">✅ ACEITAR</button><button class="btnUber btnRed" onclick="recusar()">❌ RECUSAR</button>`
+    c.innerHTML=`<div style="display:flex;justify-content:space-between"><span id="sec" style="font-weight:900;border:3px solid #000;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center">15</span><span style="background:#000;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">${dados.forma} ${dados.pago?'• PAGO':''} • ${dados.dist}km</span></div><div class="timerBar"><div id="bar"></div></div><div class="price">R$ ${dados.v}</div><div class="route"><div class="dot start"></div><div class="bairroG">BUSCAR: ${dados.b1}</div><div style="font-size:13px;color:#666">${dados.kmB}km</div><div style="height:20px"></div><div class="dot end"></div><div class="bairroG" style="color:#00a651">LEVAR: ${dados.b2}</div><div style="font-size:13px;color:#666">${dados.kmL}km</div></div><button class="btnUber btnGreen" onclick="aceitar()">✅ ACEITAR</button><button class="btnUber btnRed" onclick="recusar()">❌ RECUSAR</button>`
     iniciaTimer()
   }else if(estado=='embarque'){
-    c.innerHTML=`<h3>A caminho de ${dados.b1} - ${dados.kmB}km</h3><p>👤 Passageiro 4.9⭐</p><div class="sliderUber" onclick="chegou()"><div class="sliderTrack">CLIQUE - CHEGUEI →</div><div class="sliderThumb">📍</div></div><button class="btnUber btnRed" onclick="cancelar()">Cancelar</button>`
+    c.innerHTML=`<h3>A caminho de ${dados.b1} - ${dados.kmB}km</h3><p>👤 Passageiro 4.9⭐</p><div style="background:#000;color:#fff;padding:18px;border-radius:12px;margin-top:14px;text-align:center;font-weight:900" onclick="chegou()">CLIQUE - CHEGUEI →</div><button class="btnUber btnRed" onclick="cancelar()">Cancelar</button>`
   }else if(estado=='chegou'){
-    c.innerHTML=`<h3 style="text-align:center">Você chegou em ${dados.b1}</h3><p style="text-align:center">Aguardando</p><div class="sliderUber" onclick="iniciar()"><div class="sliderTrack">CLIQUE - INICIAR →</div><div class="sliderThumb">▶️</div></div>`
+    c.innerHTML=`<h3 style="text-align:center">Você chegou em ${dados.b1}</h3><div style="background:#000;color:#fff;padding:18px;border-radius:12px;margin-top:14px;text-align:center;font-weight:900" onclick="iniciar()">INICIAR CORRIDA →</div>`
   }else if(estado=='viagem'){
-    c.innerHTML=`<h3>Levando para ${dados.b2} - ${dados.kmL}km</h3><p>💰 R$ ${dados.v} • ${dados.forma}</p><div class="sliderUber" onclick="chegouDestino()"><div class="sliderTrack">CLIQUE - CHEGUEI DESTINO →</div><div class="sliderThumb">🏁</div></div>`
+    c.innerHTML=`<h3>Levando para ${dados.b2} - ${dados.kmL}km</h3><p>💰 R$ ${dados.v} • ${dados.forma} ${dados.pago?'• JÁ PAGO':''}</p><div style="background:#000;color:#fff;padding:18px;border-radius:12px;margin-top:14px;text-align:center;font-weight:900" onclick="chegouDestino()">CHEGUEI NO DESTINO →</div>`
   }else if(estado=='pagamento'){
-    c.innerHTML=`<div style="text-align:center"><h3>Finalizada</h3><p>${dados.b1} → ${dados.b2}</p><div class="price">R$ ${dados.v}</div><p style="margin:6px 0;font-size:13px">Pediu: <b>${dados.forma}</b> • Como recebeu?</p><div style="display:flex;gap:10px;margin:12px 0"><button id="btnDin" onclick="setPag('DINHEIRO')" style="flex:1;padding:14px;border-radius:12px;border:2px solid #000;font-weight:900">💵 DINHEIRO</button><button id="btnPix" onclick="setPag('PIX')" style="flex:1;padding:14px;border-radius:12px;border:2px solid #000;font-weight:900">💠 PIX</button></div><div id="boxDin" style="display:none"><div style="background:#fff3cd;padding:12px;border-radius:10px">⚠️ COBRAR R$ ${dados.v} NA MÃO</div><button class="btnUber btnGreen" onclick="finalizar('DINHEIRO')">✅ DINHEIRO RECEBIDO</button></div><div id="boxPix" style="display:none"><div style="width:200px;height:200px;border:2px dashed #000;margin:12px auto;display:flex;align-items:center;justify-content:center;font-weight:900">QR CODE<br>R$ ${dados.v}<br>PIX VOO</div><button class="btnUber btnGreen" onclick="finalizar('PIX')">✅ PIX RECEBIDO</button></div></div>`
-    setTimeout(()=>{setPag(dados.forma.includes('PIX')?'PIX':'DINHEIRO')},50)
+    // CASO 1: JA PAGOU NO PIX
+    if(dados.pago && dados.forma=='PIX'){
+      c.innerHTML=`<div style="text-align:center"><div style="background:#d4edda;padding:12px;border-radius:10px;font-weight:900">✅ JÁ PAGO NO PIX</div><div class="price">R$ ${dados.v}</div><p>${dados.b1} → ${dados.b2}</p><p style="color:#666;font-size:13px">Pagamento confirmado pelo passageiro</p><button class="btnUber btnGreen" onclick="finalizar()">FINALIZAR CORRIDA</button></div>`
+    }else{
+      // CASO 2: NAO PAGOU - MOSTRA DINHEIRO OU PIX COM QR
+      c.innerHTML=`<div style="text-align:center"><h3>Finalizar corrida</h3><div class="price">R$ ${dados.v}</div><p>${dados.b1} → ${dados.b2}</p><p style="margin:8px 0;font-size:13px;color:#c00;font-weight:800">⚠️ PASSAGEIRO AINDA NÃO PAGOU</p><p style="font-size:13px">Como vai receber?</p><div style="display:flex;gap:10px;margin:12px 0"><button id="btnDin" onclick="setPag('DINHEIRO')" style="flex:1;padding:14px;border-radius:12px;border:2px solid #000;font-weight:900">💵 DINHEIRO</button><button id="btnPix" onclick="setPag('PIX')" style="flex:1;padding:14px;border-radius:12px;border:2px solid #000;font-weight:900">💠 PIX</button></div><div id="boxDin" style="display:none"><div style="background:#fff3cd;padding:12px;border-radius:10px">COBRAR R$ ${dados.v} NA MÃO</div><button class="btnUber btnGreen" onclick="finalizar()">✅ DINHEIRO RECEBIDO</button></div><div id="boxPix" style="display:none"><div style="width:220px;height:220px;border:2px dashed #000;margin:12px auto;display:flex;align-items:center;justify-content:center;font-weight:900;text-align:center">QR CODE<br>R$ ${dados.v}<br>PIX VOO<br><br>Chave: voo@voo.com</div><button class="btnUber btnGreen" onclick="finalizar()">✅ PIX RECEBIDO</button></div></div>`
+      setTimeout(()=>{setPag('DINHEIRO')},50)
+    }
   }
 }
+
 function nova(){
-  let bairros=['Centro','Candeias','Recreio','Brasil','Patagônia','Ibirapuera','Felícia','Morada Real','UrBis VI','Jatobá','Alto Maron','Guarani']
+  let bairros=['Centro','Candeias','Recreio','Brasil','Patagônia','Ibirapuera','Felícia','Morada Real','UrBis VI']
   let b1=bairros[Math.floor(Math.random()*bairros.length)],b2=bairros[Math.floor(Math.random()*bairros.length)];while(b2==b1){b2=bairros[Math.floor(Math.random()*bairros.length)]}
   let kb=(Math.random()*1+0.4).toFixed(1),kl=(Math.random()*2+1).toFixed(1),dist=(parseFloat(kb)+parseFloat(kl)).toFixed(1),v=(3.5+parseFloat(dist)*2.2).toFixed(2)
-  dados={v:v.replace('.',','),vNum:v,b1:b1,b2:b2,kmB:kb,kmL:kl,dist:dist,forma:Math.random()>0.5?'PIX':'DINHEIRO',ruaB:'Rua São João, 123',ruaD:'Av. Central, 456'}
+  // SIMULA: 50% já pago no PIX, 50% não pago
+  let forma = Math.random()>0.5 ? 'PIX' : 'DINHEIRO'
+  let pago = forma=='PIX' ? (Math.random()>0.5 ? true : false) : false
+  dados={v:v.replace('.',','),vNum:v,b1:b1,b2:b2,kmB:kb,kmL:kl,dist:dist,forma:forma,pago:pago}
   if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha)
   let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng;mk1=L.marker([lat+0.004,lng+0.004]).addTo(map);mk2=L.marker([lat+0.012,lng+0.012]).addTo(map);linha=L.polyline([[lat,lng],[lat+0.004,lng+0.004],[lat+0.012,lng+0.012]],{color:'#000',weight:6}).addTo(map);map.fitBounds(linha.getBounds(),{padding:[80,80]})
   estado='oferta';render();tocar()
 }
-function iniciaTimer(){let t=15;if(timerInt)clearInterval(timerInt);timerInt=setInterval(()=>{t--;let el=document.getElementById('sec'),bar=document.getElementById('bar');if(el)el.innerText=t;if(bar)bar.style.width=(t/15*100)+'%';if(t<=0){clearInterval(timerInt);timerInt=null;recusar()}},1000)}
+function iniciaTimer(){let t=15;if(timerInt)clearInterval(timerInt);timerInt=setInterval(()=>{t--;let el=document.getElementById('sec'),bar=document.getElementById('bar');if(el)el.innerText=t;if(bar)bar.style.width=(t/15*100)+'%';if(t<=0){recusar()}},1000)}
 function aceitar(){pararSom();estado='embarque';render()}
 function recusar(){pararSom();nova()}
 function chegou(){estado='chegou';render()}
 function iniciar(){if(mk1)map.removeLayer(mk1);estado='viagem';render()}
 function chegouDestino(){estado='pagamento';render()}
-function finalizar(tipo){saldo+=parseFloat(dados.vNum);localStorage.setItem('saldo',saldo);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');nova()}
-function cancelar(){if(confirm('Cancelar?')){pararSom();estado='oferta';nova()}}
-function toggle(){
-  if(estado!='oferta'){alert('⚠️ Finalize a corrida antes de ficar offline');return}
-  online=!online;
+function finalizar(){saldo+=parseFloat(dados.vNum);localStorage.setItem('saldo',saldo);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');nova()}
+function cancelar(){pararSom();estado='oferta';nova()}
+function toggleOffline(){
+  if(estado!='oferta'){alert('⚠️ Finalize a corrida antes!');return}
+  online=!online
   let btn=document.getElementById('btnOn'),sheetEl=document.getElementById('sheet')
   if(!online){
-    pararSom();
-    if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha);
+    pararSom() // PARA TUDO MESMO
+    if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha)
     btn.innerText='FICAR ONLINE';btn.classList.add('off');sheetEl.style.display='none'
   }else{
     btn.innerText='● ONLINE';btn.classList.remove('off');sheetEl.style.display='flex';nova()
