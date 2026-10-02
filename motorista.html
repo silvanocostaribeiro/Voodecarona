@@ -1,122 +1,88 @@
-<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><title>VOO Motorista - Uber Style</title>
+<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VOO Motorista - Navegador</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,Arial}
-body{background:#000;overflow:hidden}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}body{background:#000;overflow:hidden}
 #map{height:100vh;width:100%;position:absolute;top:0;left:0;z-index:1}
-
-/* TOPO UBER */
-.topo{position:absolute;top:0;left:0;right:0;z-index:1000;background:#000;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
-.topoLeft{display:flex;align-items:center;gap:10px}
-.avatar{width:38px;height:38px;background:#fff;color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold}
-.onlineBtn{background:#333;color:#fff;border:none;padding:8px 16px;border-radius:20px;font-weight:bold}
-.onlineBtn.on{background:#00c853;color:#000}
-
-/* BOTTOM SHEET ESTILO UBER */
-.sheet{position:absolute;bottom:0;left:0;right:0;z-index:1000;background:#fff;border-radius:24px 24px 0 0;padding:0;max-height:85vh;overflow-y:auto;transition:.3s;box-shadow:0 -10px 30px rgba(0,0,0,.4)}
+.topo{position:absolute;top:0;left:0;right:0;z-index:1000;background:#000;color:#fff;padding:12px;display:flex;justify-content:space-between;align-items:center}
+.onlineBtn{padding:8px 16px;border-radius:20px;border:none;font-weight:bold;background:#333;color:#fff}.onlineBtn.on{background:#00c853;color:#000}
+.navUber{position:absolute;top:60px;left:10px;right:10px;z-index:900;background:#000;color:#fff;border-radius:16px;padding:12px 16px;display:none;justify-content:space-between}
+.sheet{position:absolute;bottom:0;left:0;right:0;z-index:1000;background:#fff;border-radius:24px 24px 0 0;padding:0;max-height:85vh;overflow-y:auto}
 .handle{width:40px;height:5px;background:#ddd;border-radius:10px;margin:10px auto}
 .sheetCont{padding:16px 20px 24px}
-.badge{background:#000;color:#00ff88;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:bold}
-.preco{font-size:32px;font-weight:900;letter-spacing:-1px}
-.linha{height:1px;background:#eee;margin:12px 0}
-.rota{display:flex;gap:12px;margin:12px 0}
-.rota .bol{width:12px;display:flex;flex-direction:column;align-items:center}
-.rota .bol div{width:10px;height:10px;border-radius:50%}
-.dot1{background:#000}.dot2{background:#00c853}
-.lineV{width:2px;height:24px;background:#ccc;margin:2px 0}
-.btnUber{width:100%;padding:18px;border:none;border-radius:12px;font-weight:800;font-size:16px;margin-top:10px;cursor:pointer}
+.preco{font-size:32px;font-weight:900}
+.btnUber{width:100%;padding:18px;border:none;border-radius:12px;font-weight:800;font-size:16px;margin-top:10px}
 .btnBlack{background:#000;color:#fff}.btnGreen{background:#00c853;color:#000}.btnGray{background:#f0f0f0;color:#000}
-.pagTag{padding:6px 10px;border-radius:8px;background:#f5f5f5;font-weight:bold;font-size:13px;display:inline-block}
 .et{display:none}.et.on{display:block}
-.navUber{position:absolute;top:60px;left:10px;right:10px;z-index:900;background:#000;color:#fff;border-radius:16px;padding:12px 16px;display:none;justify-content:space-between;align-items:center}
-.timer{width:60px;height:60px;border:4px solid #eee;border-top-color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* BOTÃO FLUTUANTE SÓ NAVEGADOR */
+#btnChegou{position:absolute;bottom:30px;left:20px;right:20px;z-index:1100;background:#00c853;color:#000;padding:20px;border:none;border-radius:16px;font-weight:900;font-size:20px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#btnCaminho{position:absolute;bottom:100px;left:20px;right:20px;z-index:1100;background:#ff8c00;color:#fff;padding:16px;border:none;border-radius:16px;font-weight:800;font-size:16px;display:none}
 </style>
 </head><body>
-
 <div id="map"></div>
+<div class="topo"><div><b>🚗 VOO</b> • R$ <span id="saldo">0,00</span></div><button class="onlineBtn" id="btnOn" onclick="toggle()">FICAR ONLINE</button></div>
+<div class="navUber" id="navUber"><div><small>GPS DENTRO DO APP</small><br><b id="navTxt">Indo buscar</b></div><div><b id="navDist">0 km</b></div></div>
 
-<!-- TOPO -->
-<div class="topo">
-<div class="topoLeft"><div class="avatar">S</div><div><div style="font-weight:800">Silvano</div><small style="color:#00ff88">● R$ <span id="saldo">0,00</span> hoje</small></div></div>
-<button class="onlineBtn" id="btnOn" onclick="toggle()">FICAR ONLINE</button>
-</div>
+<!-- BOTÕES QUE FICAM SÓ NO MODO NAVEGADOR -->
+<button id="btnCaminho" onclick="msg('Estou a caminho!')">📨 ESTOU A CAMINHO - AVISAR PASSAGEIRO</button>
+<button id="btnChegou" onclick="chegueiNoDestino()">📍 CHEGUEI NO DESTINO - FINALIZAR</button>
 
-<div class="navUber" id="navUber"><div><small style="color:#999">GPS DENTRO DO APP • UBER STYLE</small><br><b id="navTxt" style="font-size:18px">Buscando passageiro...</b></div><div id="navDist" style="font-size:20px;font-weight:900">0,8 km</div></div>
-
-<!-- SHEET OFFLINE -->
-<div class="sheet" id="sheetOff"><div class="handle"></div><div class="sheetCont" style="text-align:center"><h2 style="font-size:26px">Você está offline</h2><p style="color:#666;margin:10px 0">Fique online para receber corridas perto de você em Conquista</p><button class="btnUber btnBlack" onclick="toggle()">📍 FICAR ONLINE AGORA</button><div style="margin-top:16px;display:flex;gap:10px"><div style="flex:1;background:#f7f7f7;padding:12px;border-radius:12px"><b>R$ 0,00</b><br><small>Ganhos hoje</small></div><div style="flex:1;background:#f7f7f7;padding:12px;border-radius:12px"><b>0</b><br><small>Corridas</small></div></div></div></div>
-
-<!-- SHEET NOVA CORRIDA - IGUAL UBER -->
-<div class="sheet et" id="sheetOn"><div class="handle"></div><div class="sheetCont">
-<div style="display:flex;justify-content:space-between;align-items:center"><span class="badge">NOVA CORRIDA • <span id="kmTop">0</span></span><div class="timer" id="timer">30</div></div>
-<div style="display:flex;justify-content:space-between;align-items:end;margin-top:10px"><div><div class="preco" id="valor">R$ 12,40</div><small style="color:#666">Bandeirada + km • <span id="formaTop">DINHEIRO</span> <span id="statusTop" style="color:red">(NÃO PAGO)</span></small></div><div style="text-align:right"><b id="tempo">5 min</b><br><small>chegada</small></div></div>
-<div class="linha"></div>
-<div class="rota"><div class="bol"><div class="dot1"></div><div class="lineV"></div><div class="dot2"></div></div><div><div><small style="color:#666">BUSCAR • <span id="kmB">0,8 km</span></small><br><b>Rua do passageiro, 123 - Centro</b></div><div style="margin-top:18px"><small style="color:#666">LEVAR • <span id="kmL">2,1 km</span></small><br><b>Av. Juracy Magalhães - Conquista</b></div></div></div>
-<div class="linha"></div>
-<div style="display:flex;gap:10px"><button class="btnUber btnGray" style="flex:1" onclick="recusar()">✕ Recusar</button><button class="btnUber btnBlack" style="flex:2" onclick="aceitar()">Aceitar corrida</button></div>
+<!-- SHEET NOVA CORRIDA -->
+<div class="sheet" id="sheetOn" style="display:none"><div class="handle"></div><div class="sheetCont">
+<span style="background:#000;color:#00ff88;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:bold">NOVA CORRIDA • <span id="kmTop">0</span></span>
+<div class="preco" id="valor">R$ 0</div><small><span id="formaTop">DINHEIRO</span> <span id="statusTop"></span></small><br><br>
+📍 BUSCAR: <b id="kmB">0</b> | 🏁 LEVAR: <b id="kmL">0</b><br><br>
+<button class="btnUber btnBlack" onclick="aceitar()">✅ ACEITAR - SÓ NAVEGADOR</button>
 </div></div>
 
-<!-- SHEET EM CORRIDA -->
-<div class="sheet et" id="sheetRun"><div class="handle"></div><div class="sheetCont" style="text-align:center">
-<div style="display:flex;justify-content:space-between"><span class="badge">EM CORRIDA</span><span class="pagTag" id="runPag">DINHEIRO NÃO PAGO</span></div>
-<h2 style="margin:12px 0">Maria • ⭐ 4.9</h2>
-<p style="background:#000;color:#fff;display:inline-block;padding:6px 12px;border-radius:20px"><span id="runValor">R$ 12,40</span> • <span id="runDist">2,1 km</span></p>
-<div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<button class="btnUber btnGray" onclick="msg('Estou a caminho!')">📨 A caminho</button>
-<button class="btnUber btnGray" onclick="msg('Cheguei!')">📍 Cheguei</button>
-</div>
-<button class="btnUber btnBlack" onclick="embarcou()">👤 Passageiro embarcou</button>
-<button class="btnUber btnGreen" onclick="mostrarPagamento()">💰 Finalizar e receber</button>
-</div></div>
-
-<!-- SHEET PAGAMENTO UBER STYLE -->
+<!-- SHEET PAGAMENTO - SÓ APARECE NO FINAL -->
 <div class="sheet et" id="sheetPag"><div class="handle"></div><div class="sheetCont" style="text-align:center">
-<h2>Receber pagamento</h2><div class="preco" id="pagValor">R$ 12,40</div><p id="infoPag" style="font-weight:bold;color:red">NÃO PAGO - DINHEIRO</p>
-<div id="boxDinheiro">
-<button class="btnUber btnBlack" onclick="recebeu('DINHEIRO')">💵 Recebi em dinheiro</button>
-<button class="btnUber btnGray" onclick="gerarQR()">📱 Gerar QR Code PIX na hora</button>
-<div id="qrBox" style="display:none;margin-top:12px;background:#f7f7f7;border-radius:16px;padding:14px;border:2px dashed #000"><img id="imgQR" style="width:200px;border-radius:12px"><br><br><b>Chave PIX: 77 98805-4875</b><br><br><button class="btnUber btnGreen" onclick="recebeu('PIX')">✅ Confirmar PIX recebido</button></div>
-</div>
-<div id="boxPago" style="display:none"><div style="background:#d4edda;padding:14px;border-radius:12px;color:#155724;font-weight:bold">✅ JÁ PAGO NO PIX PELO APP</div><button class="btnUber btnBlack" onclick="recebeu('PAGO')">Concluir corrida</button></div>
+<h2>💰 RECEBER PAGAMENTO</h2><div class="preco" id="pagValor">R$ 0</div><p id="infoPag" style="color:red;font-weight:bold"></p>
+<div id="boxDinheiro"><button class="btnUber btnBlack" onclick="recebeu('DINHEIRO')">💵 RECEBI EM DINHEIRO</button><button class="btnUber" style="background:#32bcad;color:#fff" onclick="gerarQR()">📱 GERAR QR CODE PIX</button><div id="qrBox" style="display:none;margin-top:12px;background:#f7f7f7;padding:14px;border-radius:16px;border:2px dashed #000"><img id="imgQR" style="width:200px"><br><br><button class="btnUber btnGreen" onclick="recebeu('PIX')">✅ CONFIRMEI PIX</button></div></div>
+<div id="boxPago" style="display:none"><div style="background:#d4edda;padding:12px;border-radius:12px"><b>✅ JÁ PAGO NO PIX</b></div><button class="btnUber btnBlack" onclick="recebeu('PAGO')">✔️ CONCLUIR</button></div>
 </div></div>
 
 <script>
 let map=L.map('map',{zoomControl:false,attributionControl:false}).setView([-14.866,-40.839],16)
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map)
 let eu=L.marker([-14.866,-40.839]).addTo(map)
-let mk1,mk2,linha,online=false,saldo=0,dados={},timerInt
+let mk1,mk2,linha,online=false,saldo=0,dados={}
 if(navigator.geolocation){navigator.geolocation.watchPosition(p=>{eu.setLatLng([p.coords.latitude,p.coords.longitude]);if(online)map.setView([p.coords.latitude,p.coords.longitude])},null,{enableHighAccuracy:true})}
+function toggle(){online=!online;document.getElementById('btnOn').classList.toggle('on',online);document.getElementById('btnOn').innerText=online?'● ONLINE':'OFFLINE';if(online){buscar();document.getElementById('navUber').style.display='flex'}else{location.reload()}}
+function buscar(){setTimeout(()=>{let b=(Math.random()*1+0.3).toFixed(1),l=(Math.random()*3+1).toFixed(1),t=(parseFloat(b)+parseFloat(l)).toFixed(1),v=(2.5+parseFloat(t)*1.8).toFixed(2);let forma=Math.random()>0.4?'DINHEIRO':'PIX',pago=forma==='PIX';dados={v,forma,pago};document.getElementById('kmB').innerText=b+' km';document.getElementById('kmL').innerText=l+' km';document.getElementById('kmTop').innerText=t+' km';document.getElementById('valor').innerText='R$ '+v.replace('.',',');document.getElementById('formaTop').innerText=forma;let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng;let pLat=lat+0.005,pLng=lng+0.005,dLat=pLat+0.01,dLng=pLng+0.01;if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha);mk1=L.marker([pLat,pLng]).addTo(map);mk2=L.marker([dLat,dLng]).addTo(map);linha=L.polyline([[lat,lng],[pLat,pLng],[dLat,dLng]],{color:'#00ff88',weight:6}).addTo(map);map.fitBounds(linha.getBounds(),{padding:[100,100]});document.getElementById('sheetOn').style.display='block'},1000)}
 
-function toggle(){
- online=!online
- document.getElementById('btnOn').classList.toggle('on',online)
- document.getElementById('btnOn').innerText=online?'● ONLINE':'FICAR ONLINE'
- if(online){document.getElementById('sheetOff').classList.remove('on');buscar();document.getElementById('navUber').style.display='flex'}
- else{resetAll()}
+function aceitar(){
+// SOME A TELA COM OS DADOS E FICA SÓ O NAVEGADOR
+document.getElementById('sheetOn').style.display='none'
+document.getElementById('navUber').style.display='flex'
+document.getElementById('navTxt').innerText='A caminho do passageiro - Só navegador'
+document.getElementById('btnCaminho').style.display='block'
+document.getElementById('btnChegou').style.display='block'
+document.getElementById('btnChegou').innerText='📍 CHEGUEI NO PASSAGEIRO'
+map.setView(eu.getLatLng(),18)
+// TROCA FUNÇÃO DO BOTÃO DEPOIS
+document.getElementById('btnChegou').onclick=function(){embarcou()}
 }
-function resetAll(){clearInterval(timerInt);document.getElementById('sheetOff').style.display='block';document.getElementById('sheetOn').classList.remove('on');document.getElementById('sheetRun').classList.remove('on');document.getElementById('sheetPag').classList.remove('on');document.getElementById('navUber').style.display='none';if(linha)map.removeLayer(linha)}
 
-function buscar(){
- setTimeout(()=>{
-  let b=(Math.random()*1+0.3).toFixed(1),l=(Math.random()*3+1).toFixed(1),t=(parseFloat(b)+parseFloat(l)).toFixed(1),v=(2.5+parseFloat(t)*1.8).toFixed(2)
-  let forma=Math.random()>0.4?'DINHEIRO':'PIX',pago=forma==='PIX'
-  dados={v,forma,pago}
-  document.getElementById('kmB').innerText=b+' km';document.getElementById('kmL').innerText=l+' km';document.getElementById('kmTop').innerText=t+' km';document.getElementById('valor').innerText='R$ '+v.replace('.',',');document.getElementById('formaTop').innerText=forma;document.getElementById('statusTop').innerText=pago?'(PAGO)':'(NÃO PAGO)'
-  let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng
-  let pLat=lat+(Math.random()*0.01-0.005),pLng=lng+(Math.random()*0.01-0.005),dLat=pLat+(Math.random()*0.02-0.01),dLng=pLng+(Math.random()*0.02-0.01)
-  if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha)
-  mk1=L.marker([pLat,pLng]).addTo(map);mk2=L.marker([dLat,dLng]).addTo(map);linha=L.polyline([[lat,lng],[pLat,pLng],[dLat,dLng]],{color:'#00ff88',weight:6}).addTo(map)
-  map.fitBounds(linha.getBounds(),{padding:[100,100]})
-  document.getElementById('sheetOn').classList.add('on')
-  let sec=30;clearInterval(timerInt);timerInt=setInterval(()=>{sec--;document.getElementById('timer').innerText=sec;if(sec<=0){clearInterval(timerInt);recusar()}},1000)
- },1200)
+function embarcou(){
+linha.setLatLngs([[eu.getLatLng().lat,eu.getLatLng().lng],[linha.getLatLngs()[2]]])
+document.getElementById('navTxt').innerText='Levando para destino'
+document.getElementById('btnCaminho').style.display='none'
+document.getElementById('btnChegou').innerText='🏁 CHEGUEI NO DESTINO - FINALIZAR'
+document.getElementById('btnChegou').onclick=function(){chegueiNoDestino()}
 }
-function recusar(){document.getElementById('sheetOn').classList.remove('on');buscar()}
-function aceitar(){clearInterval(timerInt);document.getElementById('sheetOn').classList.remove('on');document.getElementById('sheetRun').classList.add('on');document.getElementById('runValor').innerText=document.getElementById('valor').innerText;document.getElementById('runPag').innerText=dados.forma+(dados.pago?' PAGO':' NÃO PAGO');document.getElementById('navTxt').innerText='A caminho do passageiro';map.setView(eu.getLatLng(),17)}
+
+function chegueiNoDestino(){
+// QUANDO CHEGA NO DESTINO, APARECE A TELA DE NOVO PRA FINALIZAR
+document.getElementById('btnChegou').style.display='none'
+document.getElementById('btnCaminho').style.display='none'
+document.getElementById('sheetPag').classList.add('on')
+document.getElementById('pagValor').innerText=document.getElementById('valor').innerText
+document.getElementById('infoPag').innerText=dados.pago?'✅ JÁ PAGO':'⚠️ NÃO PAGO - '+dados.forma
+document.getElementById('boxPago').style.display=dados.pago?'block':'none'
+document.getElementById('boxDinheiro').style.display=dados.pago?'none':'block'
+}
+
 function msg(t){alert('✅ '+t)}
-function embarcou(){document.getElementById('navTxt').innerText='Levando para destino';}
-function mostrarPagamento(){document.getElementById('sheetRun').classList.remove('on');document.getElementById('sheetPag').classList.add('on');document.getElementById('pagValor').innerText=document.getElementById('valor').innerText;document.getElementById('infoPag').innerText=dados.pago?'✅ JÁ PAGO NO PIX':'⚠️ NÃO PAGO - '+dados.forma;document.getElementById('qrBox').style.display='none';document.getElementById('boxPago').style.display=dados.pago?'block':'none';document.getElementById('boxDinheiro').style.display=dados.pago?'none':'block'}
-function gerarQR(){let url='https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=PIX 77988054875 VALOR '+dados.v;document.getElementById('imgQR').src=url;document.getElementById('qrBox').style.display='block'}
+function gerarQR(){document.getElementById('imgQR').src='https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=PIX 77988054875 VALOR '+dados.v;document.getElementById('qrBox').style.display='block'}
 function recebeu(t){saldo+=parseFloat(dados.v);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');document.getElementById('sheetPag').classList.remove('on');buscar()}
 </script></body></html>
