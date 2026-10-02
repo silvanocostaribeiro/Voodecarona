@@ -1,136 +1,33 @@
 <!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VOO Motorista</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}body{background:#f0f0f0}.topo{background:#000;color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000}.sw{width:62px;height:34px;background:#333;border-radius:20px;position:relative;cursor:pointer}.sw.on{background:#00c853}.bola{width:28px;height:28px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:.3s}.sw.on .bola{left:31px}
-#map{height:55vh;width:100%}.card{background:#fff;margin:10px;border-radius:20px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,.15)}
-.btn{width:100%;padding:18px;border:none;border-radius:14px;font-weight:bold;font-size:19px;margin-top:10px}.btnVerde{background:#00c853;color:#fff}.btnCinza{background:#eee}
-.valorBig{font-size:38px;font-weight:bold;text-align:center;margin:8px 0}.linha{display:flex;justify-content:space-between;margin:6px 0}
-.et{display:none}.et.on{display:block}
-.painelNav{background:#101010;color:#fff;padding:12px;border-radius:14px;position:sticky;top:62px;z-index:900;display:flex;justify-content:space-between;align-items:center}
-.painelNav b{color:#00ff88}.seta{font-size:28px}
-</style>
+<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}body{background:#f0f0f0}.topo{background:#000;color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000}.sw{width:62px;height:34px;background:#333;border-radius:20px;position:relative}.sw.on{background:#00c853}.bola{width:28px;height:28px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:.3s}.sw.on .bola{left:31px}#map{height:55vh;width:100%}.card{background:#fff;margin:10px;border-radius:20px;padding:16px}.btn{width:100%;padding:18px;border:none;border-radius:14px;font-weight:bold;font-size:19px;margin-top:10px}.btnV{background:#00c853;color:#fff}.btnC{background:#eee}.et{display:none}.et.on{display:block}.navTop{background:#000;color:#fff;padding:12px;display:flex;justify-content:space-between;align-items:center;display:none}.navTop b{color:#00ff88}</style>
 </head><body>
+<div class="topo"><div><b>🚗 VOO</b> • R$ <span id="saldo">0,00</span></div><div style="text-align:center"><div class="sw" id="sw" onclick="toggle()"><div class="bola"></div></div><br><small id="txt">OFFLINE</small></div></div>
 
-<div class="topo"><div><b>🚗 VOO MOTORISTA</b><br><small>Conquista - BA</small> • R$ <span id="saldo">0,00</span></div><div style="text-align:center"><div class="sw" id="sw" onclick="toggleOnline()"><div class="bola"></div></div><br><small id="txtOn">OFFLINE</small></div></div>
-
-<!-- PAINEL DE NAVEGAÇÃO QUE APARECE EM CIMA QUANDO ACEITA -->
-<div class="painelNav" id="painelNav" style="display:none">
- <div><small id="navStatus">NAVEGANDO</small><br><b id="navInstrucao" style="font-size:18px">Siga em frente</b><br><small id="navRua">Até passageiro</small></div>
- <div style="text-align:right"><div class="seta" id="navSeta">⬆️</div><b id="navDist">0 km</b><br><small id="navTempo">0 min</small></div>
-</div>
+<div class="navTop" id="navTop"><div><small id="navStatus">NAVEGANDO</small><br><b id="navInst" style="font-size:19px">Siga em frente</b><br><small id="navRua">Até passageiro</small></div><div style="text-align:right"><div style="font-size:26px">⬆️</div><b id="navDist">0 km</b><br><small id="navTempo">0 min</small></div></div>
 
 <div id="map"></div>
-
-<div class="card et on" id="boxOff"><center><div style="background:#000;color:#fff;padding:8px 16px;border-radius:20px;display:inline-block" id="pill">🔴 OFFLINE</div><br><br><b id="msg">Fique ONLINE para tocar corrida</b></center></div>
-
-<div class="card et" id="boxOn" style="border:3px solid #00c853">
-<div style="display:flex;justify-content:space-between"><b>🔔 NOVA CORRIDA</b><b style="background:#000;color:#fff;padding:6px 12px;border-radius:8px" id="kmTop">0 km</b></div><br>
-<b id="pax">Maria Silva</b> ⭐ 4.9<br><hr style="margin:10px 0">
-<div style="background:#fff7e6;padding:10px;border-radius:12px;border-left:5px solid orange"><b>📍 BUSCAR:</b> <span>Av. Olivia Flores</span><br><small>🟠 <span id="kmB">0 km</span> até passageiro</small></div>
-<div style="background:#eef5ff;padding:10px;border-radius:12px;border-left:5px solid #0a2540;margin-top:8px"><b>🏁 LEVAR:</b> <span>Shopping Sul</span><br><small>🔵 <span id="kmL">0 km</span></small></div>
-<div class="valorBig" id="valor">R$ 0,00</div>
-<button class="btn btnVerde" onclick="aceitar()">✅ ACEITAR</button>
-<button class="btn btnCinza" onclick="recusar()">❌ RECUSAR</button>
-</div>
-
-<div class="card et" id="boxRun" style="text-align:center;border:3px solid #000">
-<h3>🚗 EM CORRIDA</h3><b id="runNome"></b> - <span id="runValor"></span><br><br>
-<div style="display:flex;gap:10px">
-<button class="btn btnVerde" style="flex:1" onclick="cheguei()">📍 CHEGUEI</button>
-<button class="btn btnVerde" style="flex:1;background:#000" onclick="finalizar()">🏁 FINALIZAR</button>
-</div>
-</div>
-
+<div class="card et on" id="off"><center><b id="pill">🔴 OFFLINE</b><br><br><span id="msg">Fique ONLINE</span></center></div>
+<div class="card et" id="on" style="border:3px solid #00c853"><b>🔔 NOVA CORRIDA</b> - <span id="kmTop">0 km</span><br><br><div style="background:#fff7e6;padding:10px;border-left:5px solid orange;border-radius:10px">📍 BUSCAR: <span id="kmB">0</span></div><div style="background:#eef5ff;padding:10px;border-left:5px solid blue;border-radius:10px;margin-top:6px">🏁 LEVAR: <span id="kmL">0</span></div><h1 style="text-align:center;margin:10px 0" id="valor">R$ 0,00</h1><button class="btn btnV" onclick="aceitar()">✅ ACEITAR</button><button class="btn btnC" onclick="recusar()">❌ RECUSAR</button></div>
+<div class="card et" id="run" style="text-align:center;border:3px solid #000"><h3>🚗 EM CORRIDA - GPS DENTRO DO APP</h3><br><button class="btn btnV" onclick="cheguei()">📍 CHEGUEI NO PASSAGEIRO</button><button class="btn btnV" style="background:#000" onclick="finalizar()">🏁 FINALIZAR</button></div>
 <script>
 let map=L.map('map',{zoomControl:false}).setView([-14.866,-40.839],15)
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
 let eu=L.marker([-14.866,-40.839]).addTo(map)
-let mk1=null,mk2=null,linha=null,online=false,saldo=0,dados=null,paxLat=0,paxLng=0,destLat=0,destLng=0
-let navegando=false, etapaNav='buscar' // buscar ou levar
-
-if(navigator.geolocation){
- navigator.geolocation.watchPosition(p=>{
-  let lat=p.coords.latitude, lng=p.coords.longitude
-  eu.setLatLng([lat,lng])
-  if(navegando){
-   map.setView([lat,lng],17) // SEGUE O MOTORISTA DENTRO DO APP
-   atualizarNavegacao(lat,lng)
-  }
- },null,{enableHighAccuracy:true})
-}
-
-function toggleOnline(){
- online=!online
- let sw=document.getElementById('sw'),txt=document.getElementById('txtOn'),pill=document.getElementById('pill'),msg=document.getElementById('msg')
- if(online){sw.classList.add('on');txt.innerText='ONLINE';pill.innerText='🟢 ONLINE';pill.style.background='#00c853';msg.innerText='Procurando corridas...';buscar()}
- else{sw.classList.remove('on');txt.innerText='OFFLINE';pill.innerText='🔴 OFFLINE';pill.style.background='#000';msg.innerText='Fique ONLINE';document.getElementById('boxOn').classList.remove('on');document.getElementById('boxRun').classList.remove('on');document.getElementById('boxOff').classList.add('on');document.getElementById('painelNav').style.display='none';navegando=false;if(linha)map.removeLayer(linha)}
-}
-function buscar(){
- if(!online)return
- setTimeout(()=>{
-  if(!online)return
-  let b=(Math.random()*1.5+0.3).toFixed(1),l=(Math.random()*4+1).toFixed(1),t=(parseFloat(b)+parseFloat(l)).toFixed(1),v=(2.5+parseFloat(t)*1.8).toFixed(2)
-  dados={b,l,t,v}
-  document.getElementById('kmB').innerText=b+' km';document.getElementById('kmL').innerText=l+' km';document.getElementById('kmTop').innerText=t+' km';document.getElementById('valor').innerText='R$ '+v.replace('.',',')
-  let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng
-  paxLat=lat+(Math.random()*0.01-0.005);paxLng=lng+(Math.random()*0.01-0.005)
-  destLat=paxLat+(Math.random()*0.02-0.01);destLng=paxLng+(Math.random()*0.02-0.01)
-  if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha)
-  mk1=L.marker([paxLat,paxLng]).addTo(map);mk2=L.marker([destLat,destLng]).addTo(map)
-  linha=L.polyline([[lat,lng],[paxLat,paxLng],[destLat,destLng]],{color:'#0066ff',weight:6}).addTo(map)
-  map.fitBounds(linha.getBounds(),{padding:[50,50]})
-  document.getElementById('boxOff').classList.remove('on');document.getElementById('boxOn').classList.add('on')
- },1500)
-}
-
+let mk1,mk2,linha,online=false,saldo=0,dados,paxLat=0,paxLng=0,dLat=0,dLng=0,navegando=false,etapa='buscar'
+if(navigator.geolocation){navigator.geolocation.watchPosition(p=>{let la=p.coords.latitude,lo=p.coords.longitude;eu.setLatLng([la,lo]);if(navegando){map.setView([la,lo],18);calc(la,lo)}},null,{enableHighAccuracy:true})}
+function toggle(){online=!online;let sw=document.getElementById('sw'),t=document.getElementById('txt');if(online){sw.classList.add('on');t.innerText='ONLINE';buscar()}else{sw.classList.remove('on');t.innerText='OFFLINE';document.getElementById('on').classList.remove('on');document.getElementById('run').classList.remove('on');document.getElementById('off').classList.add('on');document.getElementById('navTop').style.display='none';navegando=false}}
+function buscar(){setTimeout(()=>{let b=(Math.random()*1+0.3).toFixed(1),l=(Math.random()*3+1).toFixed(1),t=(parseFloat(b)+parseFloat(l)).toFixed(1),v=(2.5+parseFloat(t)*1.8).toFixed(2);dados={b,l,t,v};document.getElementById('kmB').innerText=b+' km';document.getElementById('kmL').innerText=l+' km';document.getElementById('kmTop').innerText=t+' km';document.getElementById('valor').innerText='R$ '+v.replace('.',',');let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng;paxLat=lat+(Math.random()*0.01-0.005);paxLng=lng+(Math.random()*0.01-0.005);dLat=paxLat+(Math.random()*0.02-0.01);dLng=paxLng+(Math.random()*0.02-0.01);if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(linha)map.removeLayer(linha);mk1=L.marker([paxLat,paxLng]).addTo(map);mk2=L.marker([dLat,dLng]).addTo(map);linha=L.polyline([[lat,lng],[paxLat,paxLng],[dLat,dLng]],{color:'#0066ff',weight:7}).addTo(map);map.fitBounds(linha.getBounds(),{padding:[40,40]});document.getElementById('off').classList.remove('on');document.getElementById('on').classList.add('on')},1500)}
 function aceitar(){
- // AGORA NAVEGA DENTRO DO PROPRIO APP - NAO ABRE OUTRO PAINEL
- document.getElementById('boxOn').classList.remove('on')
- document.getElementById('boxRun').classList.add('on')
- document.getElementById('runNome').innerText=document.getElementById('pax').innerText
- document.getElementById('runValor').innerText=document.getElementById('valor').innerText
- 
- // MOSTRA PAINEL DE NAVEGAÇÃO EM CIMA
- document.getElementById('painelNav').style.display='flex'
- document.getElementById('navStatus').innerText='INDO BUSCAR PASSAGEIRO'
- document.getElementById('navInstrucao').innerText='Siga em frente'
- document.getElementById('navRua').innerText='Av. Olivia Flores'
- navegando=true
- etapaNav='buscar'
- map.setView(eu.getLatLng(),17)
-
- // VOZ FALANDO DENTRO DO APP
- if('speechSynthesis' in window){
-   let msg=new SpeechSynthesisUtterance('Rota calculada. Siga em frente até o passageiro.')
-   msg.lang='pt-BR'; speechSynthesis.speak(msg)
- }
+ document.getElementById('on').classList.remove('on');document.getElementById('run').classList.add('on');
+ document.getElementById('navTop').style.display='flex';
+ document.getElementById('navStatus').innerText='INDO BUSCAR - DENTRO DO APP';
+ navegando=true;etapa='buscar';map.setView(eu.getLatLng(),18);
+ let u=new SpeechSynthesisUtterance('Rota calculada. Siga em frente dentro do aplicativo.');u.lang='pt-BR';speechSynthesis.speak(u);
 }
-
-function atualizarNavegacao(lat,lng){
- let alvoLat = etapaNav=='buscar' ? paxLat : destLat
- let alvoLng = etapaNav=='buscar' ? paxLng : destLng
- let dist = calcularDist(lat,lng,alvoLat,alvoLng)
- document.getElementById('navDist').innerText=dist.toFixed(1)+' km'
- document.getElementById('navTempo').innerText=Math.round(dist*3)+' min'
- if(dist < 0.05){ // chegou a 50 metros
-   if(etapaNav=='buscar'){
-     document.getElementById('navInstrucao').innerText='Você chegou!'
-     document.getElementById('navStatus').innerText='PASSAGEIRO NA FRENTE'
-     if('speechSynthesis' in window){let m=new SpeechSynthesisUtterance('Você chegou ao passageiro');m.lang='pt-BR';speechSynthesis.speak(m)}
-   }
- }
-}
-
-function cheguei(){
- etapaNav='levar'
- document.getElementById('navStatus').innerText='LEVANDO PASSAGEIRO'
- document.getElementById('navInstrucao').innerText='Siga para o destino'
- document.getElementById('navRua').innerText='Shopping Sul'
- linha.setLatLngs([[eu.getLatLng().lat,eu.getLatLng().lng],[destLat,destLng]])
- map.fitBounds([[eu.getLatLng().lat,eu.getLatLng().lng],[destLat,destLng]],{padding:[50,50]})
- if('speechSynthesis' in window){let m=new SpeechSynthesisUtterance('Passageiro embarcou. Seguindo para o destino');m.lang='pt-BR';speechSynthesis.speak(m)}
-}
-
-function calcularDist(lat1,lon1,lat2,lon2){let R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;let a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))}
-function recusar(){document.getElementById('boxOn').classList.remove('on');document.getElementById('boxOff').classList.add('on');buscar()}
-function finalizar(){saldo+=parseFloat(dados.v);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');document.getElementById('boxRun').classList.remove('on');document.getElementById('boxOff').classList.add('on');document.getElementById('painelNav').style.display='none';navegando=false;if(linha)map.removeLayer(linha);setTimeout(buscar,1500)}
+function calc(la,lo){let al=etapa=='buscar'?paxLat:dLat, ao=etapa=='buscar'?paxLng:dLng;let d=dist(la,lo,al,ao);document.getElementById('navDist').innerText=d.toFixed(2)+' km';document.getElementById('navTempo').innerText=Math.round(d*3+1)+' min'}
+function cheguei(){etapa='levar';document.getElementById('navStatus').innerText='LEVANDO PASSAGEIRO - DENTRO DO APP';document.getElementById('navInst').innerText='Siga para destino';let u=new SpeechSynthesisUtterance('Passageiro embarcou. Seguindo para destino.');u.lang='pt-BR';speechSynthesis.speak(u);linha.setLatLngs([[eu.getLatLng().lat,eu.getLatLng().lng],[dLat,dLng]])}
+function dist(a,b,c,d){let R=6371,dl=(c-a)*Math.PI/180,dn=(d-b)*Math.PI/180;let x=Math.sin(dl/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dn/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+function recusar(){document.getElementById('on').classList.remove('on');document.getElementById('off').classList.add('on');buscar()}
+function finalizar(){saldo+=parseFloat(dados.v);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');document.getElementById('run').classList.remove('on');document.getElementById('off').classList.add('on');document.getElementById('navTop').style.display='none';navegando=false;if(linha)map.removeLayer(linha);buscar()}
 </script></body></html>
