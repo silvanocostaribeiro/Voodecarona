@@ -1,107 +1,34 @@
-<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VOO Motorista - Oficial</title>
+<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VOO Motorista</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}body{background:#f5f5f5}
-.topo{background:#000;color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:999}
-.sw{width:60px;height:32px;background:#333;border-radius:20px;position:relative;cursor:pointer}.sw.on{background:#00c853}.bola{width:26px;height:26px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:.3s}.sw.on.bola{left:31px}
-#map{height:52vh;width:100%;background:#e5e5e5}
-.card{background:#fff;margin:10px;border-radius:20px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
-input,select{width:100%;padding:14px;border:1.5px solid #ddd;border-radius:12px;margin:6px 0;font-size:15px}
-.btn{width:100%;padding:16px;border:none;border-radius:14px;font-weight:bold;font-size:16px;margin-top:8px;cursor:pointer}
-.btnPreto{background:#000;color:#fff}.btnVerde{background:#00c853;color:#fff}.btnZap{background:#25D366;color:#fff}.btnCinza{background:#eee}
-.valorBig{font-size:36px;font-weight:bold;text-align:center;margin:10px 0}
-.linha{display:flex;justify-content:space-between;margin:6px 0;font-size:14px}
-.etapa{display:none}.etapa.ativa{display:block}
-.scanBox{background:#000;color:#00ff88;padding:20px;border-radius:14px;text-align:center;font-family:monospace}
-.barra{width:100%;height:8px;background:#333;border-radius:10px;overflow:hidden;margin:12px 0}
-.progresso{height:100%;width:0%;background:#00ff88;transition:.3s}
-.corrida{border:2px solid #00c853;animation:tocar.8s infinite alternate}@keyframes tocar{from{transform:scale(1)}to{transform:scale(1.02)}}
-</style></head><body>
+<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}body{background:#f5f5f5}.topo{background:#000;color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:999}.sw{width:60px;height:32px;background:#333;border-radius:20px;position:relative;cursor:pointer}.sw.on{background:#00c853}.bola{width:26px;height:26px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:.3s}.sw.on .bola{left:31px}#map{height:58vh;width:100%}.card{background:#fff;margin:10px;border-radius:20px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,.1)}input,select{width:100%;padding:14px;border:1.5px solid #ddd;border-radius:12px;margin:6px 0} .btn{width:100%;padding:16px;border:none;border-radius:14px;font-weight:bold;font-size:16px;margin-top:8px}.btnPreto{background:#000;color:#fff}.btnVerde{background:#00c853;color:#fff}.btnCinza{background:#eee}.valorBig{font-size:36px;font-weight:bold;text-align:center;margin:10px 0}.linha{display:flex;justify-content:space-between;margin:6px 0;font-size:14px}.etapa{display:none}.etapa.ativa{display:block}.scanBox{background:#000;color:#00ff88;padding:20px;border-radius:14px;text-align:center;font-family:monospace}.barra{width:100%;height:8px;background:#333;border-radius:10px;overflow:hidden;margin:12px 0}.progresso{height:100%;width:0%;background:#00ff88;transition:.3s}.corrida{border:2px solid #00c853}</style>
+</head><body>
 
-<div class="topo">
-<div><b>🚗 VOO MOTORISTA</b><br><small id="nomeTop">Novo Motorista</small> • R$ <span id="saldo">0,00</span></div>
-<div style="text-align:center"><div class="sw" id="sw" onclick="toggleOnline()"><div class="bola"></div></div><br><small id="txtOn">OFFLINE</small></div>
-</div>
+<div class="topo"><div><b>🚗 VOO MOTORISTA</b><br><small id="nomeTop">Motorista</small> • R$ <span id="saldo">0,00</span></div><div style="text-align:center"><div class="sw" id="sw" onclick="toggleOnline()"><div class="bola"></div></div><br><small id="txtOn">OFFLINE</small></div></div>
 
 <div id="map"></div>
 
-<!-- ETAPA 1: CADASTRO -->
-<div class="card etapa ativa" id="et1">
-<h2>📝 Cadastro Motorista VOO</h2><small>Vitória da Conquista - BA</small><br><br>
-<b>Seus Dados</b>
-<input id="nome" placeholder="Seu nome completo">
-<input id="cpf" placeholder="CPF">
-<input id="zap" placeholder="WhatsApp (77) 9....">
-<b style="margin-top:10px;display:block">Veículo</b>
-<input id="carro" placeholder="Modelo do carro ex: Onix Branco">
-<input id="placa" placeholder="Placa ex: ABC1D23">
-<select id="ano"><option>Ano do carro</option><option>2024</option><option>2023</option><option>2022</option><option>2021</option><option>2020</option><option>2019</option><option>2018</option></select>
+<div class="card etapa ativa" id="et1"><h2>📝 Cadastro Motorista</h2><input id="nome" placeholder="Seu nome"><input id="zap" placeholder="Seu Zap (77)"><input id="carro" placeholder="Carro ex: Onix Branco"><input id="placa" placeholder="Placa"><input type="file"><button class="btn btnPreto" onclick="fazerCadastro()">✅ CADASTRAR E ESCANEAR DOCS</button></div>
 
-<b style="margin-top:10px;display:block">Documentos (foto)</b>
-<small>CNH + CRLV - Sistema vai escanear automático</small>
-<input type="file" id="doc1"><input type="file" id="doc2">
+<div class="card etapa" id="et2"><div class="scanBox"><div id="scanIcon">🔍</div><br><b id="scanTxt">ESCANEANDO DOCUMENTOS...</b><div class="barra"><div class="progresso" id="prog"></div></div><small id="scanLog">Aguarde...</small></div></div>
 
-<button class="btn btnPreto" onclick="fazerCadastro()">✅ FAZER CADASTRO E ENVIAR DOCS</button>
-</div>
+<div class="card etapa" id="et3"><div style="text-align:center;background:#e6ffe6;padding:14px;border-radius:14px;border:2px solid #00c853"><h2>✅ APROVADO!</h2><b id="nomeAprov">Motorista</b> - Pode ficar ONLINE</div><div style="text-align:center;padding:16px"><div style="background:#000;color:#fff;display:inline-block;padding:8px 16px;border-radius:20px" id="pill">🔴 OFFLINE</div><br><br><b id="msgStatus">Clique ONLINE no topo</b><br><small id="gpsTxt">📍 GPS Grátis Ativo</small></div></div>
 
-<!-- ETAPA 2: ESCANEANDO -->
-<div class="card etapa" id="et2">
-<div class="scanBox">
-<div id="scanIcon">🔍</div><br>
-<b id="scanTxt">INICIANDO VARREDURA DOS DOCUMENTOS...</b>
-<div class="barra"><div class="progresso" id="prog"></div></div>
-<small id="scanLog">Aguarde...</small>
-</div>
-</div>
-
-<!-- ETAPA 3: APROVADO + PAINEL -->
-<div class="card etapa" id="et3">
-<div style="text-align:center;background:#e6ffe6;padding:16px;border-radius:14px;border:2px solid #00c853">
-<h2>✅ DOCUMENTOS APROVADOS!</h2>
-<b id="nomeAprov">Silvano</b> - Cadastro liberado<br><small>Você já pode ficar ONLINE e receber corridas</small>
-</div>
-<div style="text-align:center;padding:20px">
-<div style="background:#000;color:#fff;display:inline-block;padding:8px 16px;border-radius:20px" id="pill">🔴 Você está OFFLINE</div><br><br>
-<b id="msgStatus">Clique no botão ONLINE no topo</b><br>
-<small id="gpsTxt">📍 GPS Grátis Ativo - Conquista</small>
-</div>
-</div>
-
-<!-- ETAPA 4: CORRIDA TOCANDO -->
-<div class="card etapa corrida" id="et4">
-<div style="display:flex;justify-content:space-between"><b>🔔 CORRIDA TOCANDO</b><b style="background:#000;color:#fff;padding:4px 10px;border-radius:8px" id="totalKmTop">4,7 km</b></div><br>
-
-<div style="display:flex;gap:10px;align-items:center"><div style="width:42px;height:42px;background:#000;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold" id="letraPax">M</div><div><b id="nomePax">Maria Silva</b> ⭐ <span id="estrela">4.9</span><br><small>Passageira • Pagamento no PIX</small></div></div>
-
-<hr style="margin:12px 0">
-
-<div style="background:#fff7e6;padding:10px;border-radius:12px;border-left:5px solid #ff8c00"><b>📍 BUSCAR EM:</b><br><span id="ondeBuscar">Av. Olivia Flores, 300 - Candeias</span><br><small>🟠 <b id="kmBuscar">1,2 km</b> até o passageiro • <span id="minBuscar">4 min</span></small></div>
-
-<div style="background:#eef5ff;padding:10px;border-radius:12px;border-left:5px solid #0a2540;margin-top:8px"><b>🏁 LEVAR PARA:</b><br><span id="ondeLevar">Shopping Conquista Sul</span><br><small>🔵 <b id="kmLevar">3,5 km</b> de viagem • <span id="minLevar">9 min</span></small></div>
-
-<div style="background:#f5f5f5;padding:12px;border-radius:12px;margin-top:10px">
-<div class="linha"><span>📏 Km buscar + levar</span><b id="kmTotal">4,7 km</b></div>
-<div class="linha"><span>⏱️ Tempo total da viagem</span><b id="tempoTotal">13 min</b></div>
-<div class="linha"><span>💲 Valor por KM</span><b>R$ 1,80 /km</b></div>
-<div class="linha"><span>🚩 Bandeirada</span><span>R$ 2,50</span></div>
-</div>
-
-<div class="valorBig" id="valorFinal">R$ 10,96</div>
-<center><small>Você recebe 100% - Sem taxa</small></center>
-
-<button class="btn btnVerde" onclick="aceitarCorrida()">✅ ACEITAR - R$ <span id="btnValor">10,96</span></button>
+<div class="card etapa corrida" id="et4"><div style="display:flex;justify-content:space-between"><b>🔔 NOVA CORRIDA</b><b style="background:#000;color:#fff;padding:4px 10px;border-radius:8px" id="totalKmTop">0 km</b></div><br>
+<div style="display:flex;gap:10px;align-items:center"><div style="width:42px;height:42px;background:#000;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center" id="letraPax">M</div><div><b id="nomePax">Maria</b> ⭐ <span id="estrela">4.9</span><br><small id="ondeBuscarTxt"></small></div></div><hr style="margin:12px 0">
+<div style="background:#fff7e6;padding:10px;border-radius:12px;border-left:5px solid #ff8c00"><b>📍 BUSCAR:</b><br><span id="ondeBuscar">Av. Olivia Flores</span><br><small>🟠 <b id="kmBuscar">0</b> até passageiro</small></div>
+<div style="background:#eef5ff;padding:10px;border-radius:12px;border-left:5px solid #0a2540;margin-top:8px"><b>🏁 LEVAR:</b><br><span id="ondeLevar">Shopping Sul</span><br><small>🔵 <b id="kmLevar">0</b> de viagem</small></div>
+<div style="background:#f5f5f5;padding:12px;border-radius:12px;margin-top:10px"><div class="linha"><span>📏 Total</span><b id="kmTotal">0</b></div><div class="linha"><span>⏱️ Tempo total</span><b id="tempoTotal">0</b></div><div class="linha"><span>💲 Por km</span><b>R$ 1,80/km</b></div></div>
+<div class="valorBig" id="valorFinal">R$ 0,00</div>
+<button class="btn btnVerde" onclick="aceitarCorrida()">✅ ACEITAR</button>
 <button class="btn btnCinza" onclick="recusarCorrida()">❌ RECUSAR</button>
 </div>
 
-<!-- ETAPA 5: EM CORRIDA - NAVEGAÇÃO GRÁTIS -->
-<div class="card etapa" id="et5" style="border:2px solid #00c853">
-<h3>🚗 EM CORRIDA com <span id="emNome">Maria</span></h3>
-<small>Para <span id="emDestino">Shopping Sul</span> - <span id="emValor">R$ 10,96</span></small><br><br>
-<div style="background:#000;color:#00ff88;padding:12px;border-radius:12px;text-align:center">
-🗺️ NAVEGAÇÃO GRÁTIS ATIVA<br><b id="navTxt">1,2 km até passageiro - Siga no mapa</b><br><small>Rota traçada em AZUL no mapa acima</small>
-</div>
-<button class="btn btnZap" onclick="zapCaminho()">💬 TÔ A CAMINHO - ZAP GRÁTIS</button>
-<button class="btn btnPreto" onclick="abrirNavegacao()">🧭 ABRIR GPS GRÁTIS</button>
-<button class="btn btnVerde" onclick="finalizarCorrida()">🏁 FINALIZAR E RECEBER</button>
+<div class="card etapa" id="et5" style="border:2px solid #00c853;text-align:center">
+<h3>🚗 EM CORRIDA</h3><b id="emNome">Maria</b> - <span id="emValor">R$ 0</span><br><br>
+<div style="background:#000;color:#00ff88;padding:14px;border-radius:12px">
+🗺️ GPS AUTOMÁTICO LIGADO<br><b id="navTxt">Navegando até passageiro...</b><br><small>Rota AZUL no mapa</small>
+</div><br>
+<button class="btn btnVerde" onclick="finalizarCorrida()">🏁 FINALIZAR CORRIDA</button>
 </div>
 
 <script>
@@ -109,84 +36,35 @@ let map=L.map('map',{zoomControl:false}).setView([-14.866,-40.839],13)
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
 let eu=L.marker([-14.866,-40.839]).addTo(map)
 let mk1=null,mk2=null,rota=null,online=false,saldo=0,dadosCorrida=null
+let destLat=null,destLng=null,paxLat=null,paxLng=null
 
-if(navigator.geolocation){navigator.geolocation.watchPosition(p=>{eu.setLatLng([p.coords.latitude,p.coords.longitude]);map.setView([p.coords.latitude,p.coords.longitude],14);document.getElementById('gpsTxt').innerText='📍 GPS: '+p.coords.latitude.toFixed(4)+' - Conquista OK'},null,{enableHighAccuracy:true})}
+if(navigator.geolocation){navigator.geolocation.watchPosition(p=>{eu.setLatLng([p.coords.latitude,p.coords.longitude])},null,{enableHighAccuracy:true})}
 
-function fazerCadastro(){
-let n=document.getElementById('nome').value
-if(n.length<3){alert('Digite seu nome');return}
-localStorage.setItem('motoristaNome',n)
-document.getElementById('nomeTop').innerText=n
-document.getElementById('nomeAprov').innerText=n
-document.getElementById('et1').classList.remove('ativa')
-document.getElementById('et2').classList.add('ativa')
-let prog=0
-let logs=['Lendo CNH...','Validando CPF...','Lendo CRLV do veículo...','Verificando placa...','Foto aprovada!','Tudo OK - Liberando painel...']
-let i=0
-let inter=setInterval(()=>{
-prog+=16
-document.getElementById('prog').style.width=prog+'%'
-if(i<logs.length){document.getElementById('scanLog').innerText=logs[i];i++}
-if(prog>=100){clearInterval(inter);document.getElementById('scanTxt').innerText='✅ APROVADO AUTOMATICAMENTE';document.getElementById('scanIcon').innerText='✅';setTimeout(()=>{document.getElementById('et2').classList.remove('ativa');document.getElementById('et3').classList.add('ativa');localStorage.setItem('motoristaAprovado','sim')},1200)}
-},600)
+function fazerCadastro(){let n=document.getElementById('nome').value||'Motorista';localStorage.setItem('motoristaNome',n);localStorage.setItem('motoristaAprovado','sim');document.getElementById('nomeTop').innerText=n;document.getElementById('nomeAprov').innerText=n;document.getElementById('et1').classList.remove('ativa');document.getElementById('et2').classList.add('ativa');let prog=0;let inter=setInterval(()=>{prog+=20;document.getElementById('prog').style.width=prog+'%';document.getElementById('scanLog').innerText=prog+'% - Validando...';if(prog>=100){clearInterval(inter);setTimeout(()=>{document.getElementById('et2').classList.remove('ativa');document.getElementById('et3').classList.add('ativa')},500)}},300)}
+
+function toggleOnline(){if(!localStorage.getItem('motoristaAprovado')){alert('Cadastre primeiro');return}online=!online;let sw=document.getElementById('sw'),txt=document.getElementById('txtOn'),pill=document.getElementById('pill'),msg=document.getElementById('msgStatus');if(online){sw.classList.add('on');txt.innerText='ONLINE';pill.innerText='🟢 ONLINE';pill.style.background='#00c853';msg.innerText='Procurando corridas...';buscarCorrida()}else{sw.classList.remove('on');txt.innerText='OFFLINE';pill.innerText='🔴 OFFLINE';pill.style.background='#000';msg.innerText='Fique ONLINE';document.getElementById('et4').classList.remove('ativa');document.getElementById('et3').classList.add('ativa');if(rota)map.removeLayer(rota)}}
+
+function buscarCorrida(){if(!online)return;setTimeout(()=>{if(!online)return;let b=(Math.random()*1.5+0.3).toFixed(1);let l=(Math.random()*4+1).toFixed(1);let t=(parseFloat(b)+parseFloat(l)).toFixed(1);let v=(2.5+parseFloat(t)*1.8).toFixed(2);dadosCorrida={b,l,t,v};document.getElementById('kmBuscar').innerText=b+' km';document.getElementById('kmLevar').innerText=l+' km';document.getElementById('kmTotal').innerText=t+' km';document.getElementById('totalKmTop').innerText=t+' km';document.getElementById('tempoTotal').innerText=Math.round(t*3+5)+' min';document.getElementById('valorFinal').innerText='R$ '+v.replace('.',',');let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng;paxLat=lat+(Math.random()*0.01-0.005);paxLng=lng+(Math.random()*0.01-0.005);destLat=paxLat+(Math.random()*0.02-0.01);destLng=paxLng+(Math.random()*0.02-0.01);if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(rota)map.removeLayer(rota);mk1=L.marker([paxLat,paxLng]).addTo(map);mk2=L.marker([destLat,destLng]).addTo(map);rota=L.polyline([[lat,lng],[paxLat,paxLng],[destLat,destLng]],{color:'#0066ff',weight:6}).addTo(map);map.fitBounds(rota.getBounds(),{padding:[40,40]});document.getElementById('et3').classList.remove('ativa');document.getElementById('et4').classList.add('ativa')},2000)}
+
+function aceitarCorrida(){
+ document.getElementById('et4').classList.remove('ativa');
+ document.getElementById('et5').classList.add('ativa');
+ document.getElementById('emNome').innerText=document.getElementById('nomePax').innerText;
+ document.getElementById('emValor').innerText=document.getElementById('valorFinal').innerText;
+ document.getElementById('navTxt').innerText='Indo buscar - '+document.getElementById('kmBuscar').innerText;
+
+ // ABRE GPS AUTOMATICO SEM CLICAR
+ // 1. Foca no mapa interno
+ map.setView([paxLat,paxLng],16);
+ // 2. Abre Google Maps / Waze automatico com rota
+ setTimeout(()=>{
+   let url='https://www.google.com/maps/dir/?api=1&origin='+eu.getLatLng().lat+','+eu.getLatLng().lng+'&destination='+paxLat+','+paxLng+'&travelmode=driving';
+   window.open(url,'_blank');
+ },800);
 }
 
-function toggleOnline(){
-if(!localStorage.getItem('motoristaAprovado')){alert('Faça cadastro primeiro');return}
-online=!online
-let sw=document.getElementById('sw'),txt=document.getElementById('txtOn'),pill=document.getElementById('pill'),msg=document.getElementById('msgStatus')
-if(online){sw.classList.add('on');txt.innerText='ONLINE';txt.style.color='#00c853';pill.innerText='🟢 Você está ONLINE';pill.style.background='#00c853';pill.style.color='#fff';msg.innerText='Procurando corridas em Conquista...';buscarCorrida()}else{sw.classList.remove('on');txt.innerText='OFFLINE';txt.style.color='#fff';pill.innerText='🔴 Você está OFFLINE';pill.style.background='#000';msg.innerText='Fique ONLINE para tocar corrida';document.getElementById('et4').classList.remove('ativa');document.getElementById('et3').classList.add('ativa');if(rota)map.removeLayer(rota);if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2)}
-}
-
-function buscarCorrida(){
-if(!online) return
-if(document.getElementById('et4').classList.contains('ativa') || document.getElementById('et5').classList.contains('ativa')) return
-setTimeout(()=>{
-if(!online) return
-let b=(Math.random()*1.5+0.3).toFixed(1)
-let l=(Math.random()*4+1).toFixed(1)
-let t=(parseFloat(b)+parseFloat(l)).toFixed(1)
-let v=(2.5+parseFloat(t)*1.8).toFixed(2)
-let tempo=Math.round(parseFloat(t)*3+4)
-let minB=Math.round(parseFloat(b)*3+2)
-let minL=Math.round(parseFloat(l)*3+2)
-dadosCorrida={b,l,t,v,tempo}
-document.getElementById('kmBuscar').innerText=b+' km'
-document.getElementById('kmLevar').innerText=l+' km'
-document.getElementById('kmTotal').innerText=t+' km'
-document.getElementById('totalKmTop').innerText=t+' km total'
-document.getElementById('tempoTotal').innerText=tempo+' min'
-document.getElementById('minBuscar').innerText=minB+' min'
-document.getElementById('minLevar').innerText=minL+' min'
-document.getElementById('valorFinal').innerText='R$ '+v.replace('.',',')
-document.getElementById('btnValor').innerText=v.replace('.',',')
-let pax=[{n:'Maria Silva',l:'M',e:'4.9'},{n:'João Oliveira',l:'J',e:'5.0'},{n:'Ana Santos',l:'A',e:'4.8'}]
-let p=pax[Math.floor(Math.random()*pax.length)]
-document.getElementById('nomePax').innerText=p.n
-document.getElementById('letraPax').innerText=p.l
-document.getElementById('estrela').innerText=p.e
-
-let lat=eu.getLatLng().lat,lng=eu.getLatLng().lng
-let latP=lat+(Math.random()*0.02-0.01),lngP=lng+(Math.random()*0.02-0.01)
-let latD=latP+(Math.random()*0.03-0.015),lngD=lngP+(Math.random()*0.03-0.015)
-if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);if(rota)map.removeLayer(rota)
-mk1=L.marker([latP,lngP],{icon:L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/149/149071.png',iconSize:[36,36]})}).addTo(map).bindPopup('Passageiro').openPopup()
-mk2=L.marker([latD,lngD],{icon:L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/684/684908.png',iconSize:[36,36]})}).addTo(map)
-rota=L.polyline([[lat,lng],[latP,lngP],[latD,lngD]],{color:'#0066ff',weight:6}).addTo(map)
-map.fitBounds(rota.getBounds(),{padding:[40,40]})
-
-document.getElementById('et3').classList.remove('ativa')
-document.getElementById('et4').classList.add('ativa')
-let audio=new Audio('https://cdn.pixabay.com/audio/2022/03/24/audio_2c0a7f3f43.mp3');audio.play().catch(()=>{})
-},2500)
-}
-
-function aceitarCorrida(){document.getElementById('et4').classList.remove('ativa');document.getElementById('et5').classList.add('ativa');document.getElementById('emNome').innerText=document.getElementById('nomePax').innerText;document.getElementById('emDestino').innerText=document.getElementById('ondeLevar').innerText;document.getElementById('emValor').innerText=document.getElementById('valorFinal').innerText;document.getElementById('navTxt').innerText=document.getElementById('kmBuscar').innerText+' até passageiro - siga no mapa AZUL'}
 function recusarCorrida(){document.getElementById('et4').classList.remove('ativa');document.getElementById('et3').classList.add('ativa');buscarCorrida()}
-function zapCaminho(){let msg=encodeURIComponent('Olá '+document.getElementById('nomePax').innerText+'! Sou seu motorista VOO 🚗 '+document.getElementById('nomeTop').innerText+' - Tô a caminho! São '+document.getElementById('kmBuscar').innerText+' ('+document.getElementById('minBuscar').innerText+') até você. Valor: '+document.getElementById('valorFinal').innerText+' - Já estou navegando pelo mapa grátis!');window.open('https://wa.me/?text='+msg,'_blank')}
-function abrirNavegacao(){if(mk1)map.setView(mk1.getLatLng(),16)}
-function finalizarCorrida(){saldo+=parseFloat(dadosCorrida.v);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');document.getElementById('et5').classList.remove('ativa');document.getElementById('et3').classList.add('ativa');document.getElementById('et3').innerHTML='<div style="text-align:center;background:#e6ffe6;padding:16px;border-radius:14px"><h2>✅ R$ '+dadosCorrida.v.replace('.',',')+' RECEBIDOS!</h2><small>Corrida finalizada - Aguardando próxima</small></div><div style="text-align:center;padding:20px"><div style="background:#00c853;color:#fff;display:inline-block;padding:8px 16px;border-radius:20px">🟢 Você está ONLINE</div><br><br><b>Procurando novas corridas...</b></div>';if(rota)map.removeLayer(rota);if(mk1)map.removeLayer(mk1);if(mk2)map.removeLayer(mk2);setTimeout(buscarCorrida,2000)}
+function finalizarCorrida(){saldo+=parseFloat(dadosCorrida.v);document.getElementById('saldo').innerText=saldo.toFixed(2).replace('.',',');document.getElementById('et5').classList.remove('ativa');document.getElementById('et3').classList.add('ativa');if(rota)map.removeLayer(rota);setTimeout(buscarCorrida,2000)}
 
-// se já aprovou antes, pula cadastro
 if(localStorage.getItem('motoristaAprovado')){document.getElementById('et1').classList.remove('ativa');document.getElementById('et3').classList.add('ativa');document.getElementById('nomeTop').innerText=localStorage.getItem('motoristaNome')}
 </script></body></html>
